@@ -14,6 +14,8 @@ import uuid
 import hashlib
 from datetime import datetime, timezone
 from typing import Optional, List
+import cv2
+import numpy as np
 
 from fastapi import APIRouter, Depends, HTTPException, status, Request
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -156,6 +158,10 @@ async def upload_inspection_images(
     inspection_id: uuid.UUID,
     files: List[UploadFile] = File(...),
     panel_types: Optional[List[str]] = Form(None),
+    pack_width_mm: Optional[float] = Form(None),
+    pack_height_mm: Optional[float] = Form(None),
+    reference_type: Optional[str] = Form(None),
+    dpi: Optional[float] = Form(None),
     db: AsyncSession = Depends(get_db),
     current_user: dict = Depends(require_role(UserRole.officer)),
 ):
@@ -164,6 +170,7 @@ async def upload_inspection_images(
     - Validates magic bytes (JPEG/PNG/WebP).
     - Computes sha256 and isolates storage under UPLOAD_DIR / inspections / {id}.
     - Performs OCR across all panels and aggregates facts into inspection.extracted_facts.
+    - Performs hierarchical optical millimeter calibration for Rule 7 character heights.
     - Never overwrites original images.
     """
     inspection = await db.get(Inspection, inspection_id)
@@ -220,6 +227,74 @@ async def upload_inspection_images(
 
     # Process OCR and merge across all panels
     merged_result = process_and_merge_panels(panel_inputs, inspection_id)
+
+    # Perform optical millimeter calibration
+    from app.services.ocr.calibration import calibrate_image_scale
+    first_bytes = panel_inputs[0]["file_bytes"] if panel_inputs else None
+    first_img = None
+    first_shape = None
+    if first_bytes:
+        nparr = np.frombuffer(first_bytes, np.uint8)
+        first_img = cv2.imdecode(nparr, cv2.IMREAD_COLOR)
+        if first_img is not None:
+            first_shape = first_img.shape[:2]
+
+    # Panel bounding box fallback (entire image if front panel selected)
+    panel_bbox = [0, 0, first_shape[1], first_shape[0]] if first_shape else None
+    calib = calibrate_image_scale(
+        image=first_img,
+        pack_width_mm=pack_width_mm,
+        pack_height_mm=pack_height_mm,
+        panel_bbox_px=panel_bbox,
+        reference_type=reference_type,
+        dpi=dpi,
+    )
+
+    # Build visual measurements with calibrated millimeter scale
+    text_regions = []
+    scale = calib.get("scale_factor_mm_per_px")
+    is_reliable = calib.get("measurement_reliable", False)
+
+    # If evidence bounding boxes exist, convert pixel height to mm
+    ev_dict = merged_result["merged_facts"].get("_evidence", {})
+    for f_name in ["net_quantity", "mrp", "numeral_height_mm"]:
+        ev = ev_dict.get(f_name)
+        h_px = None
+        h_mm = None
+        if ev and "bbox" in ev:
+            bbox = ev["bbox"]
+            if isinstance(bbox, list) and len(bbox) >= 4:
+                # Can be 4 points [[x1,y1],[x2,y2],[x3,y3],[x4,y4]] or [x1,y1,x2,y2]
+                if isinstance(bbox[0], list):
+                    h_px = max(1, int(abs(bbox[2][1] - bbox[0][1])))
+                else:
+                    h_px = max(1, int(abs(bbox[3] - bbox[1])))
+                if scale and is_reliable:
+                    h_mm = round(h_px * scale, 2)
+
+        if h_px is not None:
+            text_regions.append({
+                "label": f_name,
+                "estimated_text_height_px": h_px,
+                "estimated_text_height_mm": h_mm,
+                "measurement_confidence": calib.get("confidence", 0.0),
+                "measurement_reliable": is_reliable,
+                "notes": calib.get("notes"),
+            })
+
+    # Ensure numeral_height_mm region is populated for Rule 7 evaluator
+    qty_region = next((r for r in text_regions if r["label"] == "net_quantity"), None)
+    if qty_region:
+        numeral_region = dict(qty_region)
+        numeral_region["label"] = "numeral_height_mm"
+        text_regions.append(numeral_region)
+        if numeral_region.get("estimated_text_height_mm"):
+            merged_result["merged_facts"]["numeral_height_mm"] = numeral_region["estimated_text_height_mm"]
+
+    inspection.visual_measurements = {
+        "calibration": calib,
+        "text_regions": text_regions,
+    }
 
     inspection.extracted_facts = merged_result["merged_facts"]
     inspection.ocr_raw_text = merged_result["raw_text"]

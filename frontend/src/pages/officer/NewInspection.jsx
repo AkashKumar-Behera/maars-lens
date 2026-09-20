@@ -121,6 +121,8 @@ const NewInspection = () => {
         formData.append('files', p.file);
         formData.append('panel_types', p.type);
       });
+      if (packageWidth) formData.append('pack_width_mm', packageWidth);
+      if (packageHeight) formData.append('pack_height_mm', packageHeight);
 
       await uploadInspectionImagesApi(inspectionId, formData);
 

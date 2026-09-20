@@ -476,3 +476,22 @@ async def export_summary_report(
         headers={"Content-Disposition": "attachment; filename=inspections_summary.xlsx"},
     )
 
+
+# ------------------------------------------------------------------------------
+# 5. GET /api/v1/reports/calibration-card (Printable Calibration Target PDF)
+# ------------------------------------------------------------------------------
+@router.get("/calibration-card")
+async def download_calibration_card():
+    """
+    Serves a printable PDF containing a 50x50 mm precision optical target
+    and ID-1 card outline for physical font-height measurement calibration.
+    """
+    from app.services.ocr.calibration import generate_printable_calibration_card_pdf
+    pdf_bytes = generate_printable_calibration_card_pdf()
+    return StreamingResponse(
+        BytesIO(pdf_bytes),
+        media_type="application/pdf",
+        headers={"Content-Disposition": "inline; filename=maars_optical_calibration_card.pdf"},
+    )
+
+

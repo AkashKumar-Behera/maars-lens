@@ -9,3 +9,4 @@ __pycache__/
 .pytest_cache/
 dist/
 audit_output/chrome_profile/
+backend/uploads/
