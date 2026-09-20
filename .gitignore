@@ -1,0 +1,11 @@
+backend/.venv-ocr/
+backend/.venv311/
+.venv/
+node_modules/
+frontend/node_modules/
+backend/test.db
+__pycache__/
+*.pyc
+.pytest_cache/
+dist/
+audit_output/chrome_profile/

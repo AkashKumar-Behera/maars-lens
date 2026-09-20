@@ -1,0 +1,38 @@
+# MAARS Lens Backend Dependencies
+# Supported Python versions: 3.10 - 3.12 (Python 3.11 recommended)
+# Required on Windows CPU: paddlepaddle==2.6.2 (avoids Python 3.13 oneDNN PIR crash)
+
+fastapi
+uvicorn[standard]
+sqlalchemy[asyncio]
+aiosqlite
+asyncpg
+pydantic>=2.0
+pydantic-settings
+pydantic[email]
+email-validator
+python-jose[cryptography]
+python-multipart
+passlib[bcrypt]
+bcrypt
+paddleocr==2.9.1
+paddlepaddle==2.6.2
+protobuf<=3.20.2
+numpy<2.0.0
+opencv-python-headless
+jinja2
+httpx
+cryptography
+sse-starlette
+openpyxl
+pillow
+reportlab
+slowapi
+rapidfuzz>=3.0.0
+python-docx
+celery[redis]>=5.4.0
+redis>=5.0.0
+pytest
+pytest-asyncio
+pytest-cov
+

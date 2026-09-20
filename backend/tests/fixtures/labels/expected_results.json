@@ -1,0 +1,114 @@
+{
+  "01_compliant_bilingual.png": {
+    "is_synthetic": true,
+    "scenario": "compliant_bilingual",
+    "expected_verdict": "compliant",
+    "expected_violations": [],
+    "mandatory_fields_present": [
+      "mrp",
+      "net_quantity",
+      "mfg_date",
+      "manufacturer",
+      "customer_care",
+      "country_of_origin"
+    ]
+  },
+  "02_missing_mrp.png": {
+    "is_synthetic": true,
+    "scenario": "missing_mrp",
+    "expected_verdict": "non_compliant",
+    "expected_violations": [
+      "LMPC-R6-MRP"
+    ],
+    "mandatory_fields_present": [
+      "net_quantity",
+      "mfg_date",
+      "manufacturer",
+      "customer_care",
+      "country_of_origin"
+    ]
+  },
+  "03_tiny_font.png": {
+    "is_synthetic": true,
+    "scenario": "tiny_font",
+    "expected_verdict": "needs_review",
+    "expected_violations": [
+      "LMPC-R6-FONT"
+    ],
+    "mandatory_fields_present": [
+      "mrp",
+      "net_quantity",
+      "mfg_date",
+      "manufacturer",
+      "customer_care",
+      "country_of_origin"
+    ]
+  },
+  "04_missing_address.png": {
+    "is_synthetic": true,
+    "scenario": "missing_address",
+    "expected_verdict": "non_compliant",
+    "expected_violations": [
+      "LMPC-R6-MFR"
+    ],
+    "mandatory_fields_present": [
+      "mrp",
+      "net_quantity",
+      "mfg_date",
+      "customer_care",
+      "country_of_origin"
+    ]
+  },
+  "05_imported_no_origin.png": {
+    "is_synthetic": true,
+    "scenario": "imported_no_origin",
+    "expected_verdict": "non_compliant",
+    "expected_violations": [
+      "LMPC-R6-COO"
+    ],
+    "mandatory_fields_present": [
+      "mrp",
+      "net_quantity",
+      "mfg_date",
+      "manufacturer",
+      "customer_care"
+    ]
+  },
+  "06_blurry_label.png": {
+    "is_synthetic": true,
+    "scenario": "blurry_label",
+    "expected_verdict": "needs_review",
+    "expected_violations": [
+      "IMAGE_QUALITY_LOW"
+    ],
+    "mandatory_fields_present": []
+  },
+  "07_hindi_english_mix.png": {
+    "is_synthetic": true,
+    "scenario": "hindi_english_mix",
+    "expected_verdict": "compliant",
+    "expected_violations": [],
+    "mandatory_fields_present": [
+      "mrp",
+      "net_quantity",
+      "mfg_date",
+      "manufacturer",
+      "customer_care",
+      "country_of_origin"
+    ]
+  },
+  "08_multi_panel.png": {
+    "is_synthetic": true,
+    "scenario": "multi_panel",
+    "expected_verdict": "compliant",
+    "expected_violations": [],
+    "mandatory_fields_present": [
+      "mrp",
+      "net_quantity",
+      "mfg_date",
+      "manufacturer",
+      "customer_care",
+      "country_of_origin"
+    ]
+  }
+}

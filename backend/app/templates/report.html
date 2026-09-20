@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <style>
+        body { font-family: Arial, sans-serif; }
+        .header { text-align: center; color: #1a365d; }
+        .metadata { margin: 20px 0; border: 1px solid #e2e8f0; padding: 15px; }
+        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+        th, td { border: 1px solid #cbd5e1; padding: 8px; text-align: left; }
+        th { background-color: #f1f5f9; }
+        .pass { color: green; }
+        .fail { color: red; }
+        .needs_review { color: orange; }
+        .footer { margin-top: 50px; font-size: 0.8em; color: #64748b; text-align: center; }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>MAARS Lens Inspection Report</h1>
+    </div>
+    
+    <div class="metadata">
+        <p><strong>Inspection ID:</strong> {{ inspection.id }}</p>
+        <p><strong>Date:</strong> {{ inspection.created_at }}</p>
+        <p><strong>Product:</strong> {{ inspection.product_name }}</p>
+        <p><strong>Brand:</strong> {{ inspection.brand_name }}</p>
+    </div>
+
+    <h2>Compliance Audit Results</h2>
+    <table>
+        <tr>
+            <th>Rule Code</th>
+            <th>Statutory Ref</th>
+            <th>Result</th>
+            <th>Severity</th>
+            <th>Details</th>
+        </tr>
+        {% for result in audit_results %}
+        <tr>
+            <td>{{ result.rule_code }}</td>
+            <td>{{ result.statutory_reference }}</td>
+            <td class="{{ result.status }}">{{ result.status }}</td>
+            <td>{{ result.severity }}</td>
+            <td>{{ result.reason }}</td>
+        </tr>
+        {% endfor %}
+    </table>
+
+    <div class="footer">
+        <p>Officer Signature: _______________________</p>
+        <p>Report Hash: {{ inspection.report_hash }}</p>
+    </div>
+</body>
+</html>

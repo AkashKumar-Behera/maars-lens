@@ -1,0 +1,193 @@
+{
+  "rules": [
+    {
+      "rule_code": "LMPC-R6-NAME-ADDRESS",
+      "source_reference": "Legal Metrology (Packaged Commodities) Rules, 2011 - Rule 6(1)(a)",
+      "category": "Mandatory Declarations",
+      "rule_type": "presence",
+      "target_field": "manufacturer",
+      "description": "Name and complete address of the manufacturer or packer or importer must be declared on every package.",
+      "severity": "major",
+      "active": true,
+      "version": 1,
+      "legal_verified": false,
+      "check_definition": {
+        "operator": "exists",
+        "confidence_threshold": 0.50
+      },
+      "exemptions": [
+        {
+          "type": "institutional_pack"
+        }
+      ]
+    },
+    {
+      "rule_code": "LMPC-R6-NET-QTY",
+      "source_reference": "Legal Metrology (Packaged Commodities) Rules, 2011 - Rule 6(1)(d)",
+      "category": "Net Quantity",
+      "rule_type": "presence",
+      "target_field": "net_quantity",
+      "description": "Net quantity in standard units of weight, measure or number must be declared on package.",
+      "severity": "critical",
+      "active": true,
+      "version": 1,
+      "legal_verified": false,
+      "check_definition": {
+        "operator": "exists",
+        "confidence_threshold": 0.50,
+        "exempt_if_net_qty_lte_g": 10.0,
+        "exempt_if_net_qty_lte_ml": 10.0
+      },
+      "exemptions": [
+        {
+          "type": "net_quantity_lte_g",
+          "threshold": 10.0
+        },
+        {
+          "type": "net_quantity_lte_ml",
+          "threshold": 10.0
+        },
+        {
+          "type": "net_quantity_gte_kg",
+          "threshold": 50.0
+        }
+      ]
+    },
+    {
+      "rule_code": "LMPC-R6-MRP",
+      "source_reference": "Legal Metrology (Packaged Commodities) Rules, 2011 - Rule 6(1)(e)",
+      "category": "Retail Price",
+      "rule_type": "presence",
+      "target_field": "mrp",
+      "description": "Maximum retail price (inclusive of all taxes) in Indian Rupees must be clearly declared.",
+      "severity": "critical",
+      "active": true,
+      "version": 1,
+      "legal_verified": false,
+      "check_definition": {
+        "operator": "exists",
+        "confidence_threshold": 0.50
+      },
+      "exemptions": [
+        {
+          "type": "institutional_pack"
+        }
+      ]
+    },
+    {
+      "rule_code": "LMPC-R6-MRP-TAX-INCLUSIVE",
+      "source_reference": "Legal Metrology (Packaged Commodities) Rules, 2011 - Rule 6(1)(e)",
+      "category": "Retail Price",
+      "rule_type": "presence",
+      "target_field": "mrp_tax_inclusive",
+      "description": "MRP declaration must explicitly mention inclusive of all taxes or similar statutory phrasing.",
+      "severity": "major",
+      "active": true,
+      "version": 1,
+      "legal_verified": false,
+      "check_definition": {
+        "operator": "eq",
+        "value": true,
+        "confidence_threshold": 0.50
+      }
+    },
+    {
+      "rule_code": "LMPC-R6-MFG-MONTH-YEAR",
+      "source_reference": "Legal Metrology (Packaged Commodities) Rules, 2011 - Rule 6(1)(b)",
+      "category": "Date Declarations",
+      "rule_type": "presence",
+      "target_field": "mfg_date",
+      "description": "Month and year in which the commodity is manufactured, packed or imported must be stated.",
+      "severity": "major",
+      "active": true,
+      "version": 1,
+      "legal_verified": false,
+      "check_definition": {
+        "operator": "exists",
+        "confidence_threshold": 0.50
+      }
+    },
+    {
+      "rule_code": "LMPC-R6-COUNTRY-OF-ORIGIN",
+      "source_reference": "Legal Metrology (Packaged Commodities) Rules, 2011 - Rule 6(10)",
+      "category": "Mandatory Declarations",
+      "rule_type": "presence",
+      "target_field": "country_of_origin",
+      "description": "Name of country of origin or manufacture must be clearly declared on every imported/manufactured package.",
+      "severity": "critical",
+      "active": true,
+      "version": 1,
+      "legal_verified": false,
+      "check_definition": {
+        "operator": "exists",
+        "confidence_threshold": 0.50
+      }
+    },
+    {
+      "rule_code": "LMPC-R6-CONSUMER-CARE",
+      "source_reference": "Legal Metrology (Packaged Commodities) Rules, 2011 - Rule 6(1)(da)",
+      "category": "Consumer Redressal",
+      "rule_type": "presence",
+      "target_field": "customer_care",
+      "description": "Name, address, telephone number and email address of person/office to be contacted in case of consumer complaints.",
+      "severity": "major",
+      "active": true,
+      "version": 1,
+      "legal_verified": false,
+      "check_definition": {
+        "operator": "exists",
+        "confidence_threshold": 0.50
+      }
+    },
+    {
+      "rule_code": "LMPC-R6-UNIT-SALE-PRICE",
+      "source_reference": "Legal Metrology (Packaged Commodities) Amendment Rules - Rule 6(11)",
+      "category": "Retail Price",
+      "rule_type": "computed",
+      "target_field": "unit_sale_price",
+      "description": "Unit sale price declared on packages where net quantity is more than one unit or specified thresholds.",
+      "severity": "major",
+      "active": true,
+      "version": 1,
+      "legal_verified": false,
+      "check_definition": {
+        "operator": "unit_sale_price",
+        "tolerance_pct": 5.0
+      },
+      "exemptions": [
+        {
+          "type": "net_quantity_lte_g",
+          "threshold": 10.0
+        }
+      ]
+    },
+    {
+      "rule_code": "LMPC-R7-FONT-SIZE",
+      "source_reference": "Legal Metrology (Packaged Commodities) Rules, 2011 - Rule 7 Table",
+      "category": "Dimensions & Legibility",
+      "rule_type": "visual",
+      "target_field": "numeral_height_mm",
+      "description": "Minimum height of numerals and letters depending on net quantity.",
+      "severity": "minor",
+      "active": true,
+      "version": 1,
+      "legal_verified": false,
+      "check_definition": {
+        "operator": "font_size_band",
+        "default_min_height_mm": 2.0,
+        "bands": [
+          { "max_qty": 50, "min_height_mm": 1.0 },
+          { "min_qty": 50, "max_qty": 200, "min_height_mm": 2.0 },
+          { "min_qty": 200, "max_qty": 1000, "min_height_mm": 4.0 },
+          { "min_qty": 1000, "min_height_mm": 6.0 }
+        ]
+      },
+      "exemptions": [
+        {
+          "type": "surface_area_lte_cm2",
+          "threshold": 10.0
+        }
+      ]
+    }
+  ]
+}
