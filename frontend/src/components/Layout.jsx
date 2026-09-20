@@ -41,7 +41,8 @@ const Layout = ({ children }) => {
       { label: 'Inspections Audit', path: '/admin/inspections', icon: History },
       { label: 'Statutory Rules', path: '/admin/rules', icon: BookOpen },
       { label: 'Violations Registry', path: '/admin/violations', icon: AlertTriangle },
-      { label: 'Officer & User Registry', path: '/admin/users', icon: Users },
+      { label: 'Officer Registry', path: '/admin/officers', icon: Users },
+      { label: 'User Registry', path: '/admin/users', icon: Users },
     ],
     retailer: [
       { label: 'Retailer Overview', path: '/retailer', icon: LayoutDashboard },

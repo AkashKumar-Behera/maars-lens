@@ -653,7 +653,7 @@ async def finalize_scan(
 async def get_scan_result(
     inspection_id: uuid.UUID,
     db: AsyncSession = Depends(get_db),
-    current_user: dict = Depends(require_role(UserRole.officer)),
+    current_user: dict = Depends(require_role(UserRole.officer, UserRole.admin)),
 ):
     """Retrieves full inspection details and associated audit results."""
     inspection = await db.get(Inspection, inspection_id)
@@ -699,7 +699,7 @@ async def get_scan_result(
 @router.get("/")
 async def list_scans(
     db: AsyncSession = Depends(get_db),
-    current_user: dict = Depends(require_role(UserRole.officer)),
+    current_user: dict = Depends(require_role(UserRole.officer, UserRole.admin)),
 ):
     """Lists inspection scans."""
     stmt = select(Inspection).order_by(Inspection.created_at.desc())

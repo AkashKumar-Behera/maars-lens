@@ -1,12 +1,87 @@
+# ==========================================
+# Python & Bytecode
+# ==========================================
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# ==========================================
+# Virtual Environments
+# ==========================================
+.venv/
+backend/.venv/
 backend/.venv-ocr/
 backend/.venv311/
-.venv/
+env/
+venv/
+ENV/
+
+# ==========================================
+# Testing & Diagnostics
+# ==========================================
+.pytest_cache/
+.coverage
+htmlcov/
+.tox/
+.nox/
+audit_output/
+
+# ==========================================
+# Frontend & Node
+# ==========================================
 node_modules/
 frontend/node_modules/
-backend/test.db
-__pycache__/
-*.pyc
-.pytest_cache/
+frontend/dist/
 dist/
-audit_output/chrome_profile/
+.npm
+.eslintcache
+
+# ==========================================
+# Database & Local Uploads / Storage
+# ==========================================
+*.db
+*.sqlite
+*.sqlite3
+backend/test.db
+uploads/
 backend/uploads/
+
+# ==========================================
+# Environment Variables & Secrets
+# ==========================================
+.env
+.env.*
+!.env.example
+backend/.env
+backend/.env.*
+!backend/.env.example
+frontend/.env
+frontend/.env.*
+!frontend/.env.example
+
+# ==========================================
+# IDE & System Files
+# ==========================================
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+*.swp
+*.swo

@@ -24,8 +24,21 @@ export const toggleRuleVersionActivationApi = async (versionId, isActive) => {
   return response.data;
 };
 
+export const createRuleVersionApi = async (ruleId, payload) => {
+  // POST /api/v1/rules/{ruleId}/versions
+  const response = await apiClient.post(`/rules/${ruleId}/versions`, payload);
+  return response.data;
+};
+
+export const createRuleApi = async (payload) => {
+  // POST /api/v1/rules/
+  const response = await apiClient.post('/rules/', payload);
+  return response.data;
+};
+
 export const getRuleAuditLogsApi = async (ruleId) => {
   // GET /api/v1/rules/{ruleId}/audit-logs
   const response = await apiClient.get(`/rules/${ruleId}/audit-logs`);
   return response.data;
 };
+

@@ -3,21 +3,28 @@ import { Users, Shield, UserCheck, UserX, AlertTriangle, Search } from 'lucide-r
 import { listUsersApi, toggleUserStatusApi } from '../../api/admin';
 import { useAuth } from '../../context/AuthContext';
 
-export default function UserManagement() {
+export default function UserManagement({ initialRole }) {
   const { user: currentUser } = useAuth();
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [search, setSearch] = useState('');
-  const [roleFilter, setRoleFilter] = useState('all');
+  const [roleFilter, setRoleFilter] = useState(initialRole || 'all');
   const [actionLoading, setActionLoading] = useState(null);
+
+  useEffect(() => {
+    if (initialRole) {
+      setRoleFilter(initialRole);
+    }
+  }, [initialRole]);
 
   const fetchUsers = async () => {
     try {
       setLoading(true);
       setError(null);
       const data = await listUsersApi();
-      setUsers(data);
+      const userList = Array.isArray(data) ? data : (data?.users || []);
+      setUsers(userList);
     } catch (err) {
       console.error('Failed to load users:', err);
       setError('Unable to load user roster. Ensure admin permissions.');
@@ -56,14 +63,16 @@ export default function UserManagement() {
     }
   };
 
-  const filteredUsers = users.filter(u => {
+  const filteredUsers = (users || []).filter(u => {
+    const badge = u.badge_number || u.employee_id || '';
     const matchesSearch = 
       (u.email && u.email.toLowerCase().includes(search.toLowerCase())) ||
       (u.full_name && u.full_name.toLowerCase().includes(search.toLowerCase())) ||
-      (u.badge_number && u.badge_number.toLowerCase().includes(search.toLowerCase()));
+      badge.toLowerCase().includes(search.toLowerCase());
     const matchesRole = roleFilter === 'all' || u.role === roleFilter;
     return matchesSearch && matchesRole;
   });
+
 
   return (
     <div className="space-y-6">
@@ -156,8 +165,8 @@ export default function UserManagement() {
                         </span>
                       </td>
                       <td className="py-3 px-4 text-xs text-brand-muted">
-                        <div>{u.badge_number ? `Badge: ${u.badge_number}` : '—'}</div>
-                        <div>{u.phone_number || ''}</div>
+                        <div>{(u.badge_number || u.employee_id) ? `ID: ${u.badge_number || u.employee_id}` : '—'}</div>
+                        <div>{u.phone || u.phone_number || ''}</div>
                       </td>
                       <td className="py-3 px-4">
                         <span className={`inline-flex items-center gap-1.5 text-xs font-medium ${

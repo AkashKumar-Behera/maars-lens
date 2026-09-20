@@ -65,6 +65,7 @@ class UserListItem(BaseModel):
     email: Optional[str] = None
     role: UserRole
     employee_id: Optional[str] = None
+    phone: Optional[str] = None
     is_active: bool
     created_at: datetime
 

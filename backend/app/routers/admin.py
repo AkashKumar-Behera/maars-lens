@@ -158,8 +158,15 @@ async def get_analytics_trends(
     now = datetime.now(timezone.utc)
     cutoff = now - timedelta(days=days)
 
-    # 1. Grouped inspection query
-    insp_date_col = cast(Inspection.created_at, Date)
+    # Grouped inspection and violation queries (dialect-aware: strftime for sqlite, cast(Date) for postgres)
+    is_sqlite = db.bind.dialect.name == "sqlite" if db.bind else True
+    if is_sqlite:
+        insp_date_col = func.strftime("%Y-%m-%d", Inspection.created_at)
+        viol_date_col = func.strftime("%Y-%m-%d", Violation.created_at)
+    else:
+        insp_date_col = cast(Inspection.created_at, Date)
+        viol_date_col = cast(Violation.created_at, Date)
+
     insp_stmt = (
         select(insp_date_col.label("day"), func.count(Inspection.id).label("count"))
         .where(Inspection.created_at >= cutoff)
@@ -168,8 +175,6 @@ async def get_analytics_trends(
     insp_rows = (await db.execute(insp_stmt)).all()
     insp_by_date: Dict[str, int] = {str(row.day): row.count for row in insp_rows}
 
-    # 2. Grouped violation query
-    viol_date_col = cast(Violation.created_at, Date)
     viol_stmt = (
         select(viol_date_col.label("day"), func.count(Violation.id).label("count"))
         .where(Violation.created_at >= cutoff)
@@ -287,6 +292,7 @@ async def list_users(
             email=p.email,
             role=p.role,
             employee_id=p.employee_id,
+            phone=p.phone,
             is_active=p.is_active,
             created_at=p.created_at,
         )
@@ -341,6 +347,7 @@ async def toggle_user_status(
         email=profile.email,
         role=profile.role,
         employee_id=profile.employee_id,
+        phone=profile.phone,
         is_active=profile.is_active,
         created_at=profile.created_at,
     )

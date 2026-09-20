@@ -22,7 +22,8 @@ def get_current_user(credentials: HTTPAuthorizationCredentials = Depends(securit
             headers={"WWW-Authenticate": "Bearer"},
         )
 
-def require_role(role: str):
+def require_role(*roles):
+    allowed_roles = [r.value if hasattr(r, "value") else str(r) for r in roles]
     def role_checker(user: dict = Depends(get_current_user)):
         # Inspect user_metadata, app_metadata, or direct role claim
         user_role = (
@@ -30,8 +31,13 @@ def require_role(role: str):
             or user.get("app_metadata", {}).get("role")
             or user.get("role", "customer")
         )
-        if user_role != role:
+        user_role_val = user_role.value if hasattr(user_role, "value") else str(user_role)
+        if user_role_val not in allowed_roles:
             raise HTTPException(status_code=403, detail="Not enough permissions")
         return user
     return role_checker
+
+def require_roles(*roles):
+    return require_role(*roles)
+
 

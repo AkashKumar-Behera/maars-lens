@@ -69,7 +69,8 @@ function App() {
               <Layout>
                 <Routes>
                   <Route path="/" element={<AdminDashboard />} />
-                  <Route path="/users" element={<UserManagement />} />
+                  <Route path="/officers" element={<UserManagement initialRole="officer" />} />
+                  <Route path="/users" element={<UserManagement initialRole="all" />} />
                   <Route path="/inspections" element={<InspectionHistory />} />
                   <Route path="/inspections/:id" element={<InspectionDetails />} />
                   <Route path="/violations" element={<ViolationsList />} />
