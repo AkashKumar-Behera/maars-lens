@@ -17,7 +17,7 @@ class Settings(BaseSettings):
     CORS_ORIGINS: List[str] = ["*"]
 
     # OCR Engine Configuration
-    OCR_ENGINE: str = "paddleocr"  # "paddleocr" | "mock"
+    OCR_ENGINE: str = "winocr"  # "winocr" | "mock" | "paddleocr"
     OCR_LANGS: str = "en,hi"
     PADDLE_MODEL_DIR: Optional[str] = None
     PADDLE_ENABLE_MKLDNN: bool = False

@@ -5,7 +5,7 @@ from slowapi.errors import RateLimitExceeded
 from slowapi.middleware import SlowAPIMiddleware
 from app.core.config import settings
 from app.core.ratelimit import limiter
-from app.routers import auth, scans, rules, violations, customers, admin, reports, notifications, areas, products
+from app.routers import auth, scans, rules, violations, customers, admin, reports, notifications, areas, products, inquiries
 
 app = FastAPI(title="MAARS Lens API", version="1.0.0")
 app.state.limiter = limiter
@@ -42,6 +42,7 @@ app.include_router(products.router, prefix="/api/v1/products", tags=["products"]
 app.include_router(rules.router, prefix="/api/v1/rules", tags=["rules"])
 app.include_router(violations.router, prefix="/api/v1/violations", tags=["violations"])
 app.include_router(customers.router, prefix="/api/v1/customer", tags=["customers"])
+app.include_router(inquiries.router, prefix="/api/v1/inquiries", tags=["inquiries"])
 app.include_router(admin.router, prefix="/api/v1/admin", tags=["admin"])
 app.include_router(reports.router, prefix="/api/v1/reports", tags=["reports"])
 app.include_router(notifications.router, prefix="/api/v1/notifications", tags=["notifications"])

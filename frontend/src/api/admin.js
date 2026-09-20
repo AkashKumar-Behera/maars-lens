@@ -9,7 +9,7 @@ export const getAnalyticsOverviewApi = async () => {
 export const getAnalyticsTrendsApi = async (days = 7) => {
   // GET /api/v1/admin/analytics/trends?days=N
   const response = await apiClient.get('/admin/analytics/trends', { params: { days } });
-  return response.data;
+  return response.data?.trends || response.data || [];
 };
 
 export const getExportCsvUrl = () => {
@@ -33,5 +33,39 @@ export const listUsersApi = async (params = {}) => {
 export const toggleUserStatusApi = async (userId, isActive) => {
   // PATCH /api/v1/admin/users/{userId}/status
   const response = await apiClient.patch(`/admin/users/${userId}/status`, { is_active: isActive });
+  return response.data;
+};
+
+export const listRoleApplicationsApi = async (status) => {
+  // GET /api/v1/admin/role-applications
+  const response = await apiClient.get('/admin/role-applications', {
+    params: status ? { status } : {},
+  });
+  return response.data;
+};
+
+export const approveRoleApplicationApi = async (applicationId) => {
+  // POST /api/v1/admin/role-applications/{applicationId}/approve
+  const response = await apiClient.post(`/admin/role-applications/${applicationId}/approve`);
+  return response.data;
+};
+
+export const rejectRoleApplicationApi = async (applicationId, remarks) => {
+  // POST /api/v1/admin/role-applications/{applicationId}/reject
+  const response = await apiClient.post(`/admin/role-applications/${applicationId}/reject`, {
+    remarks,
+  });
+  return response.data;
+};
+
+export const changeUserRoleApi = async (userId, role) => {
+  // PATCH /api/v1/admin/users/{userId}/role
+  const response = await apiClient.patch(`/admin/users/${userId}/role`, { role });
+  return response.data;
+};
+
+export const deleteUserApi = async (userId) => {
+  // DELETE /api/v1/admin/users/{userId}
+  const response = await apiClient.delete(`/admin/users/${userId}`);
   return response.data;
 };

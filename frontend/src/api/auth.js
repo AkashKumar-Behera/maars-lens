@@ -6,6 +6,17 @@ export const loginApi = async (email, password) => {
   return response.data;
 };
 
+export const registerApi = async ({ email, password, full_name, phone }) => {
+  // Backend POST /api/v1/auth/register { email, password, full_name, phone }
+  const response = await apiClient.post('/auth/register', {
+    email,
+    password,
+    full_name,
+    phone,
+  });
+  return response.data;
+};
+
 export const registerCustomerApi = async (contact_channel) => {
   const response = await apiClient.post('/auth/register/customer', { contact_channel });
   return response.data;

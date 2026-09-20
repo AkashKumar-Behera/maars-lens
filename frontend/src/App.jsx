@@ -4,7 +4,7 @@ import { useAuth } from './context/AuthContext';
 import Layout from './components/Layout';
 import ProtectedRoute from './components/ProtectedRoute';
 import NotFound from './components/NotFound';
-import Login from './pages/Login';
+import AuthPage from './pages/AuthPage';
 
 // Officer Pages
 import OfficerDashboard from './pages/officer/OfficerDashboard';
@@ -29,8 +29,8 @@ function App() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-surface-dark flex items-center justify-center text-brand-muted text-sm">
-        <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-brand-blue mr-3" />
+      <div className="min-h-screen bg-slate-950 flex items-center justify-center text-slate-400 text-sm">
+        <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-indigo-500 mr-3" />
         Initializing MAARS Lens Secure Session...
       </div>
     );
@@ -39,7 +39,8 @@ function App() {
   return (
     <Router>
       <Routes>
-        <Route path="/login" element={<Login />} />
+        <Route path="/login" element={<AuthPage initialMode="login" />} />
+        <Route path="/register" element={<AuthPage initialMode="register" />} />
 
         {/* Officer Route Hierarchy */}
         <Route 
@@ -69,6 +70,7 @@ function App() {
               <Layout>
                 <Routes>
                   <Route path="/" element={<AdminDashboard />} />
+                  <Route path="/scan" element={<NewInspection />} />
                   <Route path="/officers" element={<UserManagement initialRole="officer" />} />
                   <Route path="/users" element={<UserManagement initialRole="all" />} />
                   <Route path="/inspections" element={<InspectionHistory />} />
@@ -90,6 +92,8 @@ function App() {
               <Layout>
                 <Routes>
                   <Route path="/" element={<RetailerDashboard />} />
+                  <Route path="/inspections" element={<InspectionHistory />} />
+                  <Route path="/inspections/:id" element={<InspectionDetails />} />
                   <Route path="/rules" element={<RulesBrowser />} />
                   <Route path="*" element={<NotFound />} />
                 </Routes>

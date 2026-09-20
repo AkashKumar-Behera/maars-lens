@@ -1,4 +1,4 @@
-from app.models.user import Profile, Retailer, Customer
+from app.models.user import Profile, Retailer, Customer, RoleApplication
 from app.models.area import Area, OfficerAreaAssignment
 from app.models.inspection import Inspection, ImageQualityAssessment, InspectionImage
 from app.models.rule import ComplianceRule, ComplianceRuleVersion, RuleAuditLog

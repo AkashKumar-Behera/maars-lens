@@ -15,10 +15,7 @@ python-jose[cryptography]
 python-multipart
 passlib[bcrypt]
 bcrypt
-paddleocr==2.9.1
-paddlepaddle==2.6.2
-protobuf<=3.20.2
-numpy<2.0.0
+winocr; sys_platform == 'win32'
 opencv-python-headless
 jinja2
 httpx

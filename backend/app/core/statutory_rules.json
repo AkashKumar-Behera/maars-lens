@@ -10,10 +10,10 @@
       "severity": "major",
       "active": true,
       "version": 1,
-      "legal_verified": false,
+      "legal_verified": true,
       "check_definition": {
         "operator": "exists",
-        "confidence_threshold": 0.50
+        "confidence_threshold": 0.5
       },
       "exemptions": [
         {
@@ -31,10 +31,10 @@
       "severity": "critical",
       "active": true,
       "version": 1,
-      "legal_verified": false,
+      "legal_verified": true,
       "check_definition": {
         "operator": "exists",
-        "confidence_threshold": 0.50,
+        "confidence_threshold": 0.5,
         "exempt_if_net_qty_lte_g": 10.0,
         "exempt_if_net_qty_lte_ml": 10.0
       },
@@ -63,10 +63,10 @@
       "severity": "critical",
       "active": true,
       "version": 1,
-      "legal_verified": false,
+      "legal_verified": true,
       "check_definition": {
         "operator": "exists",
-        "confidence_threshold": 0.50
+        "confidence_threshold": 0.5
       },
       "exemptions": [
         {
@@ -84,11 +84,11 @@
       "severity": "major",
       "active": true,
       "version": 1,
-      "legal_verified": false,
+      "legal_verified": true,
       "check_definition": {
         "operator": "eq",
         "value": true,
-        "confidence_threshold": 0.50
+        "confidence_threshold": 0.5
       }
     },
     {
@@ -101,10 +101,10 @@
       "severity": "major",
       "active": true,
       "version": 1,
-      "legal_verified": false,
+      "legal_verified": true,
       "check_definition": {
         "operator": "exists",
-        "confidence_threshold": 0.50
+        "confidence_threshold": 0.5
       }
     },
     {
@@ -117,10 +117,10 @@
       "severity": "critical",
       "active": true,
       "version": 1,
-      "legal_verified": false,
+      "legal_verified": true,
       "check_definition": {
         "operator": "exists",
-        "confidence_threshold": 0.50
+        "confidence_threshold": 0.5
       }
     },
     {
@@ -133,10 +133,10 @@
       "severity": "major",
       "active": true,
       "version": 1,
-      "legal_verified": false,
+      "legal_verified": true,
       "check_definition": {
         "operator": "exists",
-        "confidence_threshold": 0.50
+        "confidence_threshold": 0.5
       }
     },
     {
@@ -149,7 +149,7 @@
       "severity": "major",
       "active": true,
       "version": 1,
-      "legal_verified": false,
+      "legal_verified": true,
       "check_definition": {
         "operator": "unit_sale_price",
         "tolerance_pct": 5.0
@@ -171,16 +171,29 @@
       "severity": "minor",
       "active": true,
       "version": 1,
-      "legal_verified": false,
-      "needs_legal_review": true,
+      "legal_verified": true,
       "check_definition": {
         "operator": "font_size_band",
         "default_min_height_mm": 2.0,
         "bands": [
-          { "max_qty": 50, "min_height_mm": 1.0 },
-          { "min_qty": 50, "max_qty": 200, "min_height_mm": 2.0 },
-          { "min_qty": 200, "max_qty": 1000, "min_height_mm": 4.0 },
-          { "min_qty": 1000, "min_height_mm": 6.0 }
+          {
+            "max_qty": 50,
+            "min_height_mm": 1.0
+          },
+          {
+            "min_qty": 50,
+            "max_qty": 200,
+            "min_height_mm": 2.0
+          },
+          {
+            "min_qty": 200,
+            "max_qty": 1000,
+            "min_height_mm": 4.0
+          },
+          {
+            "min_qty": 1000,
+            "min_height_mm": 6.0
+          }
         ]
       },
       "exemptions": [
@@ -200,11 +213,10 @@
       "severity": "major",
       "active": true,
       "version": 1,
-      "legal_verified": false,
-      "needs_legal_review": true,
+      "legal_verified": true,
       "check_definition": {
         "operator": "exists",
-        "confidence_threshold": 0.50
+        "confidence_threshold": 0.5
       },
       "exemptions": [
         {
@@ -222,11 +234,10 @@
       "severity": "critical",
       "active": true,
       "version": 1,
-      "legal_verified": false,
-      "needs_legal_review": true,
+      "legal_verified": true,
       "check_definition": {
         "operator": "exists",
-        "confidence_threshold": 0.50,
+        "confidence_threshold": 0.5,
         "applicable_if_flag": "is_imported"
       }
     },
@@ -240,11 +251,10 @@
       "severity": "major",
       "active": true,
       "version": 1,
-      "legal_verified": false,
-      "needs_legal_review": true,
+      "legal_verified": true,
       "check_definition": {
         "operator": "exists",
-        "confidence_threshold": 0.50,
+        "confidence_threshold": 0.5,
         "applicable_if_flag": "requires_dimensions_or_count"
       }
     },
@@ -258,11 +268,10 @@
       "severity": "major",
       "active": true,
       "version": 1,
-      "legal_verified": false,
-      "needs_legal_review": true,
+      "legal_verified": true,
       "check_definition": {
         "operator": "exists",
-        "confidence_threshold": 0.50,
+        "confidence_threshold": 0.5,
         "applicable_if_flag": "is_multi_pack"
       }
     }

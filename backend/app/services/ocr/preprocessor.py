@@ -76,7 +76,8 @@ def preprocess_image(image_bytes: bytes) -> Tuple[np.ndarray, Dict[str, Any]]:
 
         if angles:
             median_angle = float(np.median(angles))
-            if abs(median_angle) > 0.5:
+            # Only correct small skews (<= 10 degrees). Large angles indicate false edge orientation
+            if 0.5 < abs(median_angle) <= 10.0:
                 (h, w) = denoised.shape[:2]
                 center = (w // 2, h // 2)
                 rot_mat = cv2.getRotationMatrix2D(center, median_angle, 1.0)

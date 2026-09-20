@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
+import { useAuth } from '../../context/AuthContext';
 import { getScanResultApi, submitManualReviewApi, finalizeScanApi, listInspectionImagesApi } from '../../api/scans';
 import { getProductHistoryApi } from '../../api/products';
 import { createViolationApi } from '../../api/violations';
@@ -23,6 +24,10 @@ import {
 
 const InspectionDetails = () => {
   const { id } = useParams();
+  const { user } = useAuth();
+  const role = user?.role || 'officer';
+  const backPath = role === 'admin' ? '/admin/inspections' : role === 'retailer' ? '/retailer/inspections' : '/officer/inspections';
+
   const [inspection, setInspection] = useState(null);
   const [images, setImages] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -233,7 +238,7 @@ const InspectionDetails = () => {
       <div className="p-8 bg-rose-950/20 border border-rose-800 rounded-xl text-center text-rose-300">
         <AlertTriangle size={32} className="mx-auto mb-2 text-rose-400" />
         <p className="font-bold">{error || 'Inspection record not found'}</p>
-        <Link to="/officer/inspections" className="mt-4 inline-block text-xs text-indigo-400 hover:underline">
+        <Link to={backPath} className="mt-4 inline-block text-xs text-indigo-400 hover:underline">
           Return to inspection history
         </Link>
       </div>
@@ -249,7 +254,7 @@ const InspectionDetails = () => {
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
           <Link
-            to="/officer/inspections"
+            to={backPath}
             className="inline-flex items-center space-x-1 text-xs text-slate-400 hover:text-white mb-2"
           >
             <ArrowLeft size={14} />
@@ -303,7 +308,7 @@ const InspectionDetails = () => {
             </>
           )}
 
-          {inspection.is_finalized && inspection.final_compliance === 'non_compliant' && (
+          {role !== 'retailer' && inspection.is_finalized && inspection.final_compliance === 'non_compliant' && (
             <button
               onClick={() => setShowViolationModal(true)}
               className="inline-flex items-center space-x-2 px-4 py-2 bg-rose-600 hover:bg-rose-500 text-white text-xs font-semibold rounded-lg shadow-md transition"
@@ -479,7 +484,9 @@ const InspectionDetails = () => {
                       <StatusBadge status={ar.effective_result} />
                     </td>
                     <td className="px-6 py-4 text-right">
-                      {!inspection.is_finalized ? (
+                      {role === 'retailer' ? (
+                        <span className="text-xs text-slate-500">Audited Record</span>
+                      ) : !inspection.is_finalized ? (
                         <button
                           onClick={() => {
                             setSelectedRule(ar);

@@ -1,10 +1,17 @@
 import apiClient from './client';
 
-export const customerScanLabelApi = async (file, panelType = 'front') => {
+export const customerScanLabelApi = async (filesOrFile, panelTypes = 'front') => {
   // POST /api/v1/customer/scan
   const formData = new FormData();
-  formData.append('file', file);
-  formData.append('panel_type', panelType);
+  if (Array.isArray(filesOrFile)) {
+    filesOrFile.forEach((f) => {
+      if (f) formData.append('files', f);
+    });
+    formData.append('panel_types', Array.isArray(panelTypes) ? JSON.stringify(panelTypes) : panelTypes);
+  } else {
+    formData.append('file', filesOrFile);
+    formData.append('panel_type', panelTypes);
+  }
 
   const response = await apiClient.post('/customer/scan', formData, {
     headers: { 'Content-Type': 'multipart/form-data' },
@@ -31,3 +38,16 @@ export const getCustomerReportApi = async (reportId) => {
   const response = await apiClient.get(`/customer/reports/${reportId}`);
   return response.data;
 };
+
+export const submitRoleApplicationApi = async (payload) => {
+  // POST /api/v1/customer/role-application
+  const response = await apiClient.post('/customer/role-application', payload);
+  return response.data;
+};
+
+export const getMyRoleApplicationApi = async () => {
+  // GET /api/v1/customer/role-application/me
+  const response = await apiClient.get('/customer/role-application/me');
+  return response.data;
+};
+

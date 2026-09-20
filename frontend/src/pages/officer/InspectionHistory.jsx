@@ -1,11 +1,16 @@
 import { useState, useEffect } from 'react';
 import { listScansApi } from '../../api/scans';
 import { Link } from 'react-router-dom';
+import { useAuth } from '../../context/AuthContext';
 import StatusBadge from '../../components/StatusBadge';
 import EmptyState from '../../components/EmptyState';
 import { Search, Filter, ArrowRight, Camera, FileText } from 'lucide-react';
 
 const InspectionHistory = () => {
+  const { user } = useAuth();
+  const role = user?.role || 'officer';
+  const basePath = role === 'admin' ? '/admin' : role === 'retailer' ? '/retailer' : '/officer';
+
   const [scans, setScans] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
@@ -41,18 +46,24 @@ const InspectionHistory = () => {
     <div className="space-y-6">
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-white tracking-tight">Inspection Records Archive</h1>
+          <h1 className="text-2xl font-bold text-white tracking-tight">
+            {role === 'retailer' ? 'Compliance Inquiries & Premises Audits' : 'Inspection Records Archive'}
+          </h1>
           <p className="text-sm text-slate-400 mt-1">
-            Historical package inspections, cryptographic hashes, and compliance verdicts.
+            {role === 'retailer'
+              ? 'Review compliance audit logs, statutory verdicts, and certification records for your retail premises.'
+              : 'Historical package inspections, cryptographic hashes, and compliance verdicts.'}
           </p>
         </div>
-        <Link
-          to="/officer/new-inspection"
-          className="inline-flex items-center space-x-2 px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-semibold rounded-lg shadow-md transition"
-        >
-          <Camera size={16} />
-          <span>New Inspection</span>
-        </Link>
+        {role !== 'retailer' && (
+          <Link
+            to={`${basePath}/new-inspection`}
+            className="inline-flex items-center space-x-2 px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-semibold rounded-lg shadow-md transition"
+          >
+            <Camera size={16} />
+            <span>New Inspection</span>
+          </Link>
+        )}
       </div>
 
       {/* Filter Bar */}
@@ -141,7 +152,7 @@ const InspectionHistory = () => {
                     </td>
                     <td className="px-6 py-4 text-right">
                       <Link
-                        to={`/officer/inspections/${scan.id}`}
+                        to={`${basePath}/inspections/${scan.id}`}
                         className="inline-flex items-center space-x-1 px-3 py-1.5 bg-slate-700/60 hover:bg-slate-700 text-indigo-300 hover:text-white rounded-lg text-xs font-semibold transition"
                       >
                         <span>Details</span>

@@ -1,5 +1,5 @@
 import { useState, useEffect, createContext, useContext } from 'react';
-import { loginApi } from '../api/auth';
+import { loginApi, registerApi } from '../api/auth';
 
 const AuthContext = createContext({});
 
@@ -69,6 +69,31 @@ export const AuthProvider = ({ children }) => {
     return userData;
   };
 
+  const register = async ({ fullName, email, password, phone }) => {
+    const data = await registerApi({
+      full_name: fullName,
+      email,
+      password,
+      phone,
+    });
+
+    if (data.access_token) {
+      const userData = {
+        id: data.user.id,
+        email: data.user.email,
+        name: data.user.full_name || email.split('@')[0].toUpperCase(),
+        role: data.user.role || 'customer',
+      };
+      setUser(userData);
+      setRole(userData.role);
+      setToken(data.access_token);
+      localStorage.setItem('user', JSON.stringify(userData));
+      localStorage.setItem('token', data.access_token);
+      return userData;
+    }
+    return data;
+  };
+
   const logout = async () => {
     setUser(null);
     setRole(null);
@@ -78,7 +103,7 @@ export const AuthProvider = ({ children }) => {
   };
 
   return (
-    <AuthContext.Provider value={{ user, role, token, loading, login, logout }}>
+    <AuthContext.Provider value={{ user, role, token, loading, login, register, logout }}>
       {children}
     </AuthContext.Provider>
   );

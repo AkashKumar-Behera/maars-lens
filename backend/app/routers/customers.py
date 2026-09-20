@@ -20,52 +20,74 @@ router = APIRouter(prefix="", tags=["customers"])
 
 @router.post("/scan")
 async def scan_product_label(
-    file: UploadFile = File(...),
+    files: Optional[List[UploadFile]] = File(None),
+    file: Optional[UploadFile] = File(None),
+    panel_types: Optional[str] = Form(None), # JSON string or comma-separated list of panel types
     panel_type: Optional[str] = Form("front"),
     db: AsyncSession = Depends(get_db),
     current_user: dict = Depends(require_role(UserRole.customer)),
 ):
     """
     Consumer Real-Time Product Label Scan & Compliance Audit.
-    1. Validates magic bytes, format (JPEG/PNG/WebP), and size (<= 15MB).
-    2. Persists image evidence under uploads/customer_scans/{id}.
-    3. Runs PaddleOCR (multilingual EN/HI) with preprocessor and extracts packaged commodity facts.
-    4. Evaluates all active statutory Legal Metrology rules via the statutory rule engine.
-    5. Computes overall compliance verdict (compliant, non_compliant, needs_review) and returns
-       structured, field-level violations and statutory references.
+    Supports 1 mandatory image + up to 4 additional optional images (5 total package faces).
+    Merges OCR extracted facts across all submitted panels.
     """
-    if not file or not file.filename:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Please select a product image.",
-        )
+    upload_list: List[UploadFile] = []
+    if files:
+        upload_list.extend([f for f in files if f and f.filename])
+    if file and file.filename and file not in upload_list:
+        upload_list.append(file)
 
-    file_bytes = await file.read()
-    if not file_bytes:
+    if not upload_list:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail="The uploaded image file is empty. Please select a valid product image.",
-        )
-
-    try:
-        sha256, mime, size = validate_and_hash_image(file_bytes)
-    except ValueError as e:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail=str(e),
+            detail="Please upload at least 1 commodity package image (e.g. Front / MRP Panel).",
         )
 
     scan_id = uuid.uuid4()
-    ext = ".png" if "png" in mime else (".webp" if "webp" in mime else ".jpg")
-    filename = f"{scan_id}_consumer_scan{ext}"
-    storage_path = save_image_to_storage(file_bytes, scan_id, filename)
+    panel_inputs = []
 
-    # Prepare single or multi-panel input for OCR processing pipeline
-    panel_inputs = [{
-        "panel_type": (panel_type or "front").lower(),
-        "file_bytes": file_bytes,
-        "image_id": scan_id,
-    }]
+    # Parse panel types
+    parsed_types = ["front", "back", "side", "top", "other"]
+    if panel_types:
+        try:
+            import json
+            pt_data = json.loads(panel_types)
+            if isinstance(pt_data, list):
+                parsed_types = [str(x).lower() for x in pt_data]
+        except Exception:
+            parsed_types = [x.strip().lower() for x in panel_types.split(",")]
+
+    for idx, uf in enumerate(upload_list[:5]): # Maximum 5 images
+        file_bytes = await uf.read()
+        if not file_bytes:
+            continue
+
+        try:
+            sha256, mime, size = validate_and_hash_image(file_bytes)
+        except ValueError as e:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=f"Image {idx+1} ({uf.filename}) error: {str(e)}",
+            )
+
+        img_id = uuid.uuid4()
+        ext = ".png" if "png" in mime else (".webp" if "webp" in mime else ".jpg")
+        filename = f"{scan_id}_panel_{idx}_{img_id}{ext}"
+        save_image_to_storage(file_bytes, scan_id, filename)
+
+        ptype = parsed_types[idx] if idx < len(parsed_types) else (panel_type or "front").lower()
+        panel_inputs.append({
+            "panel_type": ptype,
+            "file_bytes": file_bytes,
+            "image_id": img_id,
+        })
+
+    if not panel_inputs:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="The uploaded image files are empty. Please select valid product images.",
+        )
 
     try:
         merged_result = process_and_merge_panels(panel_inputs, scan_id)
@@ -205,3 +227,119 @@ async def get_report(
     if not report or report.customer_id != customer_uuid:
         raise HTTPException(status_code=404, detail="Report not found.")
     return report
+
+
+from pydantic import BaseModel
+from app.models.user import RoleApplication, Profile as UserProfile
+
+
+class RoleApplicationSubmitRequest(BaseModel):
+    requested_role: UserRole
+    badge_number: Optional[str] = None
+    department: Optional[str] = None
+    business_name: Optional[str] = None
+    license_number: Optional[str] = None
+    shop_address: Optional[str] = None
+    phone: Optional[str] = None
+    notes: Optional[str] = None
+
+
+@router.post("/role-application")
+async def submit_role_application(
+    payload: RoleApplicationSubmitRequest,
+    db: AsyncSession = Depends(get_db),
+    current_user: dict = Depends(require_role(UserRole.customer))
+):
+    """
+    Submits a role elevation accreditation application for the authenticated customer/user.
+    Valid requested roles: officer or retailer.
+    """
+    if payload.requested_role not in [UserRole.officer, UserRole.retailer]:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Role elevation is only permissible towards 'officer' or 'retailer' designations."
+        )
+
+    cust_id_raw = current_user.get("id") or current_user.get("sub")
+    try:
+        user_uuid = uuid.UUID(str(cust_id_raw))
+    except (ValueError, TypeError):
+        raise HTTPException(status_code=400, detail="Invalid user session ID.")
+
+    # Check if a pending application already exists
+    pending_res = await db.execute(
+        select(RoleApplication).where(
+            RoleApplication.user_id == user_uuid,
+            RoleApplication.status == "pending"
+        )
+    )
+    if pending_res.scalar_one_or_none():
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail="You already have an active role elevation application pending administrative review."
+        )
+
+    application = RoleApplication(
+        id=uuid.uuid4(),
+        user_id=user_uuid,
+        requested_role=payload.requested_role,
+        status="pending",
+        badge_number=payload.badge_number,
+        department=payload.department,
+        business_name=payload.business_name,
+        license_number=payload.license_number,
+        shop_address=payload.shop_address,
+        phone=payload.phone,
+        notes=payload.notes
+    )
+    db.add(application)
+    await db.commit()
+    await db.refresh(application)
+
+    return {
+        "message": "Role elevation application submitted successfully for administrator review.",
+        "application_id": str(application.id),
+        "status": application.status,
+        "requested_role": application.requested_role.value
+    }
+
+
+@router.get("/role-application/me")
+async def get_my_role_application(
+    db: AsyncSession = Depends(get_db),
+    current_user: dict = Depends(require_role(UserRole.customer))
+):
+    """
+    Retrieves the latest role elevation application for the authenticated user.
+    """
+    cust_id_raw = current_user.get("id") or current_user.get("sub")
+    try:
+        user_uuid = uuid.UUID(str(cust_id_raw))
+    except (ValueError, TypeError):
+        return {"has_application": False}
+
+    res = await db.execute(
+        select(RoleApplication)
+        .where(RoleApplication.user_id == user_uuid)
+        .order_by(RoleApplication.created_at.desc())
+    )
+    app_record = res.scalars().first()
+    if not app_record:
+        return {"has_application": False}
+
+    return {
+        "has_application": True,
+        "id": str(app_record.id),
+        "requested_role": app_record.requested_role.value,
+        "status": app_record.status,
+        "badge_number": app_record.badge_number,
+        "department": app_record.department,
+        "business_name": app_record.business_name,
+        "shop_address": app_record.shop_address,
+        "license_number": app_record.license_number,
+        "notes": app_record.notes,
+        "admin_remarks": app_record.admin_remarks,
+        "created_at": app_record.created_at.isoformat() if app_record.created_at else None,
+        "reviewed_at": app_record.reviewed_at.isoformat() if app_record.reviewed_at else None
+    }
+

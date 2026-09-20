@@ -18,10 +18,11 @@ import uuid
 from datetime import datetime, timezone, timedelta
 from typing import Optional, List, Dict, Any
 
+from pydantic import BaseModel
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from fastapi.responses import StreamingResponse
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select, func, case, cast, Date
+from sqlalchemy import select, func, case, cast, Date, delete
 
 from app.core.database import get_db
 from app.core.auth import require_role
@@ -32,7 +33,7 @@ from app.models.enums import (
     ViolationStatus,
     RuleVerificationStatus,
 )
-from app.models.user import Profile
+from app.models.user import Profile, RoleApplication, Retailer, Customer
 from app.models.inspection import Inspection
 from app.models.violation import Violation
 from app.models.rule import ComplianceRule, ComplianceRuleVersion
@@ -351,3 +352,236 @@ async def toggle_user_status(
         is_active=profile.is_active,
         created_at=profile.created_at,
     )
+
+
+# ------------------------------------------------------------------------------
+# 6. Role Elevation Governance Endpoints
+# ------------------------------------------------------------------------------
+class RoleApplicationRejectRequest(BaseModel):
+    remarks: Optional[str] = None
+
+
+@router.get("/role-applications")
+async def list_role_applications(
+    status_filter: Optional[str] = Query(None, alias="status"),
+    db: AsyncSession = Depends(get_db),
+    current_user: dict = Depends(require_role(UserRole.admin)),
+):
+    query = select(RoleApplication, Profile).join(Profile, RoleApplication.user_id == Profile.id)
+    if status_filter:
+        query = query.where(RoleApplication.status == status_filter)
+    query = query.order_by(
+        case((RoleApplication.status == "pending", 0), else_=1),
+        RoleApplication.created_at.desc()
+    )
+    res = await db.execute(query)
+    rows = res.all()
+    
+    items = []
+    for app_rec, prof in rows:
+        items.append({
+            "id": str(app_rec.id),
+            "user_id": str(prof.id),
+            "applicant_name": prof.full_name,
+            "applicant_email": prof.email,
+            "current_role": prof.role.value,
+            "requested_role": app_rec.requested_role.value,
+            "status": app_rec.status,
+            "badge_number": app_rec.badge_number,
+            "department": app_rec.department,
+            "business_name": app_rec.business_name,
+            "shop_address": app_rec.shop_address,
+            "license_number": app_rec.license_number,
+            "phone": app_rec.phone or prof.phone,
+            "notes": app_rec.notes,
+            "admin_remarks": app_rec.admin_remarks,
+            "created_at": app_rec.created_at.isoformat() if app_rec.created_at else None,
+            "reviewed_at": app_rec.reviewed_at.isoformat() if app_rec.reviewed_at else None,
+        })
+    return {"applications": items, "total": len(items)}
+
+
+@router.post("/role-applications/{application_id}/approve")
+async def approve_role_application(
+    application_id: uuid.UUID,
+    db: AsyncSession = Depends(get_db),
+    current_user: dict = Depends(require_role(UserRole.admin)),
+):
+    app_rec = await db.get(RoleApplication, application_id)
+    if not app_rec:
+        raise HTTPException(status_code=404, detail="Role elevation application not found.")
+    
+    if app_rec.status != "pending":
+        raise HTTPException(status_code=400, detail=f"Cannot approve an application that is already '{app_rec.status}'.")
+
+    prof = await db.get(Profile, app_rec.user_id)
+    if not prof:
+        raise HTTPException(status_code=404, detail="Applicant user profile not found.")
+
+    # Promote role
+    prof.role = app_rec.requested_role
+    if app_rec.requested_role == UserRole.officer:
+        if app_rec.badge_number:
+            prof.employee_id = app_rec.badge_number
+        if app_rec.phone:
+            prof.phone = app_rec.phone
+    elif app_rec.requested_role == UserRole.retailer:
+        existing_retailer = await db.get(Retailer, prof.id)
+        if not existing_retailer:
+            new_retailer = Retailer(
+                id=prof.id,
+                business_name=app_rec.business_name or f"{prof.full_name}'s Store",
+                shop_address=app_rec.shop_address or "Unspecified",
+                license_number=app_rec.license_number
+            )
+            db.add(new_retailer)
+        else:
+            if app_rec.business_name:
+                existing_retailer.business_name = app_rec.business_name
+            if app_rec.shop_address:
+                existing_retailer.shop_address = app_rec.shop_address
+            if app_rec.license_number:
+                existing_retailer.license_number = app_rec.license_number
+
+    app_rec.status = "approved"
+    app_rec.reviewed_at = datetime.now(timezone.utc)
+    await db.commit()
+
+    return {
+        "message": f"Application approved! User '{prof.full_name}' promoted to '{prof.role.value}'.",
+        "user_id": str(prof.id),
+        "new_role": prof.role.value,
+        "status": "approved"
+    }
+
+
+@router.post("/role-applications/{application_id}/reject")
+async def reject_role_application(
+    application_id: uuid.UUID,
+    payload: Optional[RoleApplicationRejectRequest] = None,
+    db: AsyncSession = Depends(get_db),
+    current_user: dict = Depends(require_role(UserRole.admin)),
+):
+    app_rec = await db.get(RoleApplication, application_id)
+    if not app_rec:
+        raise HTTPException(status_code=404, detail="Role elevation application not found.")
+
+    if app_rec.status != "pending":
+        raise HTTPException(status_code=400, detail=f"Cannot reject an application that is already '{app_rec.status}'.")
+
+    app_rec.status = "rejected"
+    app_rec.admin_remarks = payload.remarks if payload and payload.remarks else "Application declined by administrator."
+    app_rec.reviewed_at = datetime.now(timezone.utc)
+    await db.commit()
+
+    return {
+        "message": "Role elevation application rejected.",
+        "application_id": str(app_rec.id),
+        "status": "rejected"
+    }
+
+
+class DirectRoleChangeRequest(BaseModel):
+    role: UserRole
+
+
+@router.patch("/users/{user_id}/role")
+async def update_user_role(
+    user_id: uuid.UUID,
+    payload: DirectRoleChangeRequest,
+    db: AsyncSession = Depends(get_db),
+    current_user: dict = Depends(require_role(UserRole.admin)),
+):
+    """
+    Directly updates a user's role (officer, retailer, admin, customer).
+    Protects the primary system administrator from demotion.
+    """
+    prof = await db.get(Profile, user_id)
+    if not prof:
+        raise HTTPException(status_code=404, detail="User profile not found.")
+
+    # Primary administrator protection rule
+    if prof.email == "admin@maars.gov.in" and payload.role != UserRole.admin:
+        raise HTTPException(
+            status_code=400,
+            detail="Primary System Administrator (admin@maars.gov.in) role cannot be changed or demoted."
+        )
+
+    old_role = prof.role
+    prof.role = payload.role
+
+    # Ensure supporting table records exist
+    if payload.role == UserRole.retailer:
+        ret = await db.get(Retailer, prof.id)
+        if not ret:
+            ret = Retailer(
+                id=prof.id,
+                business_name=f"{prof.full_name}'s Enterprise",
+                shop_address="Registered Commercial Outlet",
+                license_number=f"LMPC-RET-{prof.id.hex[:6].upper()}"
+            )
+            db.add(ret)
+    elif payload.role == UserRole.customer:
+        cust = await db.get(Customer, prof.id)
+        if not cust:
+            cust = Customer(
+                id=prof.id,
+                customer_code=f"CUST-{prof.id.hex[:8].upper()}",
+                onboarding_completed=True
+            )
+            db.add(cust)
+
+    await db.commit()
+    return {
+        "message": f"User '{prof.full_name}' role changed from {old_role.value} to {prof.role.value}.",
+        "user_id": str(prof.id),
+        "new_role": prof.role.value
+    }
+
+
+@router.delete("/users/{user_id}")
+async def delete_user(
+    user_id: uuid.UUID,
+    db: AsyncSession = Depends(get_db),
+    current_user: dict = Depends(require_role(UserRole.admin)),
+):
+    """
+    Deletes a user account.
+    Protects the primary system administrator from being deleted.
+    """
+    prof = await db.get(Profile, user_id)
+    if not prof:
+        raise HTTPException(status_code=404, detail="User profile not found.")
+
+    # Primary administrator protection rule
+    if prof.email == "admin@maars.gov.in":
+        raise HTTPException(
+            status_code=400,
+            detail="Primary System Administrator (admin@maars.gov.in) cannot be deleted or removed."
+        )
+
+    caller_id = current_user.get("id") or current_user.get("sub")
+    if str(prof.id) == str(caller_id):
+        raise HTTPException(
+            status_code=400,
+            detail="You cannot delete your own active administrator account."
+        )
+
+    # Clean up dependent entities
+    await db.execute(delete(RoleApplication).where(RoleApplication.user_id == prof.id))
+    ret = await db.get(Retailer, prof.id)
+    if ret:
+        await db.delete(ret)
+    cust = await db.get(Customer, prof.id)
+    if cust:
+        await db.delete(cust)
+
+    await db.delete(prof)
+    await db.commit()
+
+    return {
+        "message": f"User account '{prof.full_name}' ({prof.email}) permanently deleted.",
+        "user_id": str(user_id)
+    }
+
+
