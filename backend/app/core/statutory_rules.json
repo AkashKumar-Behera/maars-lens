@@ -172,6 +172,7 @@
       "active": true,
       "version": 1,
       "legal_verified": false,
+      "needs_legal_review": true,
       "check_definition": {
         "operator": "font_size_band",
         "default_min_height_mm": 2.0,
@@ -188,6 +189,82 @@
           "threshold": 10.0
         }
       ]
+    },
+    {
+      "rule_code": "LMPC-R6-GENERIC-NAME",
+      "source_reference": "Legal Metrology (Packaged Commodities) Rules, 2011 - Rule 6(1)(b)",
+      "category": "Mandatory Declarations",
+      "rule_type": "presence",
+      "target_field": "generic_name",
+      "description": "Common or generic name of the commodity must be declared on every package.",
+      "severity": "major",
+      "active": true,
+      "version": 1,
+      "legal_verified": false,
+      "needs_legal_review": true,
+      "check_definition": {
+        "operator": "exists",
+        "confidence_threshold": 0.50
+      },
+      "exemptions": [
+        {
+          "type": "institutional_pack"
+        }
+      ]
+    },
+    {
+      "rule_code": "LMPC-R6-IMPORTER-DETAILS",
+      "source_reference": "Legal Metrology (Packaged Commodities) Rules, 2011 - Rule 6(1)(a) & Rule 6(10)",
+      "category": "Mandatory Declarations",
+      "rule_type": "presence",
+      "target_field": "importer",
+      "description": "Name and complete address of the importer must be declared on imported packages.",
+      "severity": "critical",
+      "active": true,
+      "version": 1,
+      "legal_verified": false,
+      "needs_legal_review": true,
+      "check_definition": {
+        "operator": "exists",
+        "confidence_threshold": 0.50,
+        "applicable_if_flag": "is_imported"
+      }
+    },
+    {
+      "rule_code": "LMPC-R6-DIMENSIONS-PIECES",
+      "source_reference": "Legal Metrology (Packaged Commodities) Rules, 2011 - Rule 6(1)(f) & Rule 12",
+      "category": "Dimensions & Legibility",
+      "rule_type": "presence",
+      "target_field": "dimensions_or_count",
+      "description": "Dimensions or number of pieces must be declared where commodity is sold by size or count.",
+      "severity": "major",
+      "active": true,
+      "version": 1,
+      "legal_verified": false,
+      "needs_legal_review": true,
+      "check_definition": {
+        "operator": "exists",
+        "confidence_threshold": 0.50,
+        "applicable_if_flag": "requires_dimensions_or_count"
+      }
+    },
+    {
+      "rule_code": "LMPC-R24-MULTI-PACK",
+      "source_reference": "Legal Metrology (Packaged Commodities) Rules, 2011 - Rule 24",
+      "category": "Mandatory Declarations",
+      "rule_type": "presence",
+      "target_field": "multi_pack_details",
+      "description": "Multi-piece or combination packages must declare individual quantity and total count of items.",
+      "severity": "major",
+      "active": true,
+      "version": 1,
+      "legal_verified": false,
+      "needs_legal_review": true,
+      "check_definition": {
+        "operator": "exists",
+        "confidence_threshold": 0.50,
+        "applicable_if_flag": "is_multi_pack"
+      }
     }
   ]
 }

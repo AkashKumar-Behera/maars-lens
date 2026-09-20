@@ -216,3 +216,82 @@ def test_font_size_band_evaluator_fail():
     res = evaluate_single_rule(font_rule, facts, visual_measurements=visual_measurements)
     assert res["automated_result"] == AuditResultType.fail
     assert "less than required minimum" in res["automated_reason"]
+
+
+# ------------------------------------------------------------------------------
+# 5. New Mandatory Declarations Tests (Generic Name, Importer, Multi-Pack, Pieces)
+# ------------------------------------------------------------------------------
+def test_generic_name_mandatory_declaration_pass_and_fail():
+    entities = build_statutory_rule_entities()
+    generic_rule = next(r for r in entities if r.rule.rule_code == "LMPC-R6-GENERIC-NAME")
+
+    # Pass case
+    facts_pass = {"generic_name": "Rolled Oats Breakfast Cereal"}
+    res_pass = evaluate_single_rule(generic_rule, facts_pass)
+    assert res_pass["automated_result"] == AuditResultType.pass_
+
+    # Fail case
+    facts_fail = {"generic_name": None}
+    res_fail = evaluate_single_rule(generic_rule, facts_fail)
+    assert res_fail["automated_result"] == AuditResultType.fail
+
+
+def test_importer_details_conditional_applicability():
+    entities = build_statutory_rule_entities()
+    importer_rule = next(r for r in entities if r.rule.rule_code == "LMPC-R6-IMPORTER-DETAILS")
+
+    # Domestic product (not imported) -> not applicable
+    facts_domestic = {"is_imported": False, "importer": None}
+    res_dom = evaluate_single_rule(importer_rule, facts_domestic)
+    assert res_dom["automated_result"] == AuditResultType.not_applicable
+
+    # Imported product without importer declaration -> FAIL
+    facts_imported_missing = {"is_imported": True, "importer": None}
+    res_imp_fail = evaluate_single_rule(importer_rule, facts_imported_missing)
+    assert res_imp_fail["automated_result"] == AuditResultType.fail
+
+    # Imported product with importer declaration -> PASS
+    facts_imported_pass = {"is_imported": True, "importer": "Global Imports Pvt Ltd, Mumbai"}
+    res_imp_pass = evaluate_single_rule(importer_rule, facts_imported_pass)
+    assert res_imp_pass["automated_result"] == AuditResultType.pass_
+
+
+def test_dimensions_pieces_conditional_applicability():
+    entities = build_statutory_rule_entities()
+    dim_rule = next(r for r in entities if r.rule.rule_code == "LMPC-R6-DIMENSIONS-PIECES")
+
+    # Product sold by weight (not by count/dimensions) -> not applicable
+    facts_by_wt = {"requires_dimensions_or_count": False, "dimensions_or_count": None}
+    res_wt = evaluate_single_rule(dim_rule, facts_by_wt)
+    assert res_wt["automated_result"] == AuditResultType.not_applicable
+
+    # Product sold by count (e.g. wipes / tiles) without count -> FAIL
+    facts_count_fail = {"requires_dimensions_or_count": True, "dimensions_or_count": None}
+    res_count_fail = evaluate_single_rule(dim_rule, facts_count_fail)
+    assert res_count_fail["automated_result"] == AuditResultType.fail
+
+    # Product sold by count with count declared -> PASS
+    facts_count_pass = {"requires_dimensions_or_count": True, "dimensions_or_count": "50 wipes (15cm x 20cm)"}
+    res_count_pass = evaluate_single_rule(dim_rule, facts_count_pass)
+    assert res_count_pass["automated_result"] == AuditResultType.pass_
+
+
+def test_multi_pack_conditional_applicability():
+    entities = build_statutory_rule_entities()
+    mp_rule = next(r for r in entities if r.rule.rule_code == "LMPC-R24-MULTI-PACK")
+
+    # Single unit pack -> not applicable
+    facts_single = {"is_multi_pack": False, "multi_pack_details": None}
+    res_single = evaluate_single_rule(mp_rule, facts_single)
+    assert res_single["automated_result"] == AuditResultType.not_applicable
+
+    # Multi pack without internal details -> FAIL
+    facts_mp_fail = {"is_multi_pack": True, "multi_pack_details": None}
+    res_mp_fail = evaluate_single_rule(mp_rule, facts_mp_fail)
+    assert res_mp_fail["automated_result"] == AuditResultType.fail
+
+    # Multi pack with details declared -> PASS
+    facts_mp_pass = {"is_multi_pack": True, "multi_pack_details": "Contains 4 units of 75g each"}
+    res_mp_pass = evaluate_single_rule(mp_rule, facts_mp_pass)
+    assert res_mp_pass["automated_result"] == AuditResultType.pass_
+

@@ -66,6 +66,24 @@ def evaluate_single_rule(
             "severity": rule_version.severity,
         }
 
+    # 0b. Data-driven conditional applicability guard (e.g. is_imported, is_multi_pack, requires_dimensions_or_count)
+    applicable_flag = check_def.get("applicable_if_flag")
+    if applicable_flag and not bool(facts.get(applicable_flag, False)):
+        return {
+            "rule_version_id": rule_version.id,
+            "rule_code": code,
+            "rule_version": rule_version.version,
+            "statutory_reference": rule_version.statutory_reference,
+            "automated_result": AuditResultType.not_applicable,
+            "effective_result": AuditResultType.not_applicable,
+            "actual_value": str(facts.get(target_field)) if facts.get(target_field) is not None else None,
+            "expected_value": f"Applicable only when '{applicable_flag}' is declared",
+            "fact_confidence": 1.0,
+            "measurement_reliable": True,
+            "automated_reason": f"Rule not applicable: package does not exhibit condition '{applicable_flag}'.",
+            "severity": rule_version.severity,
+        }
+
     actual_value = facts.get(target_field)
     field_present = target_field in facts and actual_value is not None
 

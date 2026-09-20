@@ -417,6 +417,10 @@ KEYWORD_PATTERNS = {
     "customer_care": ["consumer care", "customer care", "helpline", "toll free", "care@", "grievance officer", "उपभोक्ता संरक्षण", "ग्राहक सेवा"],
     "country_of_origin": ["country of origin", "origin:", "made in", "मूल देश", "उत्पत्ति देश"],
     "fssai": ["fssai", "एफएसएसएआई"],
+    "generic_name": ["generic name", "common name", "product name", "commodity name", "वस्तु का नाम", "सामान्य नाम"],
+    "importer": ["imported by", "importer:", "imported & marketed by", "आयातक"],
+    "dimensions_or_count": ["dimension", "dimensions", "size:", "piece", "pieces", "pcs", "units", "count", "लंबाई", "चौड़ाई"],
+    "multi_pack_details": ["multipack", "multi-pack", "combi-pack", "contains:", "units inside", "packs of"],
 }
 
 
@@ -470,6 +474,13 @@ def extract_facts(
         "fssai": None,
         "ingredients": None,
         "mrp_tax_inclusive": False,
+        "generic_name": None,
+        "importer": None,
+        "dimensions_or_count": None,
+        "multi_pack_details": None,
+        "is_imported": False,
+        "is_multi_pack": False,
+        "requires_dimensions_or_count": False,
         "_evidence": field_evidence,
     }
 
@@ -542,6 +553,8 @@ def extract_facts(
                 facts["country_of_origin"] = norm_text
                 per_field["country_of_origin"] = conf
                 field_evidence["country_of_origin"] = region.to_dict()
+                if not re.search(r'\b(?:india|bharat|bhārat)\b', norm_text, re.IGNORECASE):
+                    facts["is_imported"] = True
 
         # 8. FSSAI
         if _matches_keyword(norm_text, KEYWORD_PATTERNS["fssai"], threshold=80.0) or re.search(r'\b1\d{13}\b', norm_text):
@@ -549,6 +562,37 @@ def extract_facts(
                 facts["fssai"] = norm_text
                 per_field["fssai"] = conf
                 field_evidence["fssai"] = region.to_dict()
+
+        # 9. Generic / Common Name
+        if _matches_keyword(norm_text, KEYWORD_PATTERNS["generic_name"], threshold=75.0):
+            if facts["generic_name"] is None or conf > per_field.get("generic_name", 0.0):
+                facts["generic_name"] = norm_text
+                per_field["generic_name"] = conf
+                field_evidence["generic_name"] = region.to_dict()
+
+        # 10. Importer Details
+        if _matches_keyword(norm_text, KEYWORD_PATTERNS["importer"], threshold=75.0):
+            facts["is_imported"] = True
+            if facts["importer"] is None or conf > per_field.get("importer", 0.0):
+                facts["importer"] = norm_text
+                per_field["importer"] = conf
+                field_evidence["importer"] = region.to_dict()
+
+        # 11. Dimensions or Pieces
+        if _matches_keyword(norm_text, KEYWORD_PATTERNS["dimensions_or_count"], threshold=75.0) or re.search(r'\b\d+(?:\.\d+)?\s*(?:cm|mm|m)\s*[xX*]\s*\d+(?:\.\d+)?\s*(?:cm|mm|m)\b|\b\d+\s*(?:pcs|pieces|units|sheets|wipes)\b', norm_text, re.IGNORECASE):
+            facts["requires_dimensions_or_count"] = True
+            if facts["dimensions_or_count"] is None or conf > per_field.get("dimensions_or_count", 0.0):
+                facts["dimensions_or_count"] = norm_text
+                per_field["dimensions_or_count"] = conf
+                field_evidence["dimensions_or_count"] = region.to_dict()
+
+        # 12. Multi-pack Details
+        if _matches_keyword(norm_text, KEYWORD_PATTERNS["multi_pack_details"], threshold=75.0):
+            facts["is_multi_pack"] = True
+            if facts["multi_pack_details"] is None or conf > per_field.get("multi_pack_details", 0.0):
+                facts["multi_pack_details"] = norm_text
+                per_field["multi_pack_details"] = conf
+                field_evidence["multi_pack_details"] = region.to_dict()
 
     overall_conf = float(np.mean(confidences)) if confidences else 0.0
     full_text = "\n".join(raw_lines)
