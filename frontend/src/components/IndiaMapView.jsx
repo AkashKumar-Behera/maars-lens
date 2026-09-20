@@ -1,11 +1,13 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { Map, NavigationControl, Marker, Popup } from 'maplibre-gl';
+import 'maplibre-gl/dist/maplibre-gl.css';
 
 const MAPTILER_API_KEY = 'IG8L4cXU4hvolM8F63k6';
 
 export default function IndiaMapView({ incidents = [], onSelectIncident = null, height = '450px' }) {
   const mapContainer = useRef(null);
   const map = useRef(null);
+  const [mapLoaded, setMapLoaded] = useState(false);
 
   useEffect(() => {
     if (!mapContainer.current || map.current) return;
@@ -24,8 +26,19 @@ export default function IndiaMapView({ incidents = [], onSelectIncident = null, 
       m.addControl(new NavigationControl({ showCompass: true }), 'top-right');
 
       m.on('load', () => {
+        setMapLoaded(true);
         m.resize();
       });
+
+      // Handle fallback if custom style fails
+      m.on('error', (e) => {
+        console.warn('MapLibre error or style issue:', e);
+      });
+
+      // Trigger resize after small delay to handle flex/grid layout settle
+      setTimeout(() => {
+        if (m) m.resize();
+      }, 500);
 
       map.current = m;
     } catch (err) {
