@@ -1,0 +1,277 @@
+[
+  {
+    "file": "01_compliant_bilingual.png",
+    "status": 200,
+    "verdict": "needs_review",
+    "facts_count": 8,
+    "facts": [
+      "mrp",
+      "net_quantity",
+      "mfg_date",
+      "expiry_date",
+      "manufacturer",
+      "customer_care",
+      "country_of_origin",
+      "mrp_tax_inclusive"
+    ],
+    "violations_count": 1,
+    "violations": [
+      "LMPC-R7-FONT-SIZE"
+    ],
+    "latency": 3.971
+  },
+  {
+    "file": "02_missing_mrp.png",
+    "status": 200,
+    "verdict": "non_compliant",
+    "facts_count": 7,
+    "facts": [
+      "net_quantity",
+      "mfg_date",
+      "expiry_date",
+      "manufacturer",
+      "customer_care",
+      "country_of_origin",
+      "mrp_tax_inclusive"
+    ],
+    "violations_count": 4,
+    "violations": [
+      "PCR-2011-RULE-6-1-MRP",
+      "LMPC-R6-MRP",
+      "LMPC-R6-MRP-TAX-INCLUSIVE",
+      "LMPC-R7-FONT-SIZE"
+    ],
+    "latency": 3.959
+  },
+  {
+    "file": "03_tiny_font.png",
+    "status": 200,
+    "verdict": "non_compliant",
+    "facts_count": 6,
+    "facts": [
+      "mrp",
+      "net_quantity",
+      "mfg_date",
+      "manufacturer",
+      "customer_care",
+      "mrp_tax_inclusive"
+    ],
+    "violations_count": 2,
+    "violations": [
+      "LMPC-R6-COUNTRY-OF-ORIGIN",
+      "LMPC-R7-FONT-SIZE"
+    ],
+    "latency": 4.161
+  },
+  {
+    "file": "04_missing_address.png",
+    "status": 200,
+    "verdict": "needs_review",
+    "facts_count": 8,
+    "facts": [
+      "mrp",
+      "net_quantity",
+      "mfg_date",
+      "expiry_date",
+      "manufacturer",
+      "customer_care",
+      "country_of_origin",
+      "mrp_tax_inclusive"
+    ],
+    "violations_count": 1,
+    "violations": [
+      "LMPC-R7-FONT-SIZE"
+    ],
+    "latency": 3.063
+  },
+  {
+    "file": "05_imported_no_origin.png",
+    "status": 200,
+    "verdict": "non_compliant",
+    "facts_count": 7,
+    "facts": [
+      "mrp",
+      "net_quantity",
+      "mfg_date",
+      "expiry_date",
+      "manufacturer",
+      "customer_care",
+      "mrp_tax_inclusive"
+    ],
+    "violations_count": 2,
+    "violations": [
+      "LMPC-R6-COUNTRY-OF-ORIGIN",
+      "LMPC-R7-FONT-SIZE"
+    ],
+    "latency": 3.31
+  },
+  {
+    "file": "06_blurry_label.png",
+    "status": 200,
+    "verdict": "non_compliant",
+    "facts_count": 1,
+    "facts": [
+      "mrp_tax_inclusive"
+    ],
+    "violations_count": 9,
+    "violations": [
+      "PCR-2011-RULE-6-1-MRP",
+      "LMPC-R6-NAME-ADDRESS",
+      "LMPC-R6-NET-QTY",
+      "LMPC-R6-MRP",
+      "LMPC-R6-MRP-TAX-INCLUSIVE",
+      "LMPC-R6-MFG-MONTH-YEAR",
+      "LMPC-R6-COUNTRY-OF-ORIGIN",
+      "LMPC-R6-CONSUMER-CARE",
+      "LMPC-R7-FONT-SIZE"
+    ],
+    "latency": 0.727
+  },
+  {
+    "file": "07_hindi_english_mix.png",
+    "status": 200,
+    "verdict": "needs_review",
+    "facts_count": 8,
+    "facts": [
+      "mrp",
+      "net_quantity",
+      "mfg_date",
+      "expiry_date",
+      "manufacturer",
+      "customer_care",
+      "country_of_origin",
+      "mrp_tax_inclusive"
+    ],
+    "violations_count": 1,
+    "violations": [
+      "LMPC-R7-FONT-SIZE"
+    ],
+    "latency": 3.752
+  },
+  {
+    "file": "08_multi_panel.png",
+    "status": 200,
+    "verdict": "needs_review",
+    "facts_count": 8,
+    "facts": [
+      "mrp",
+      "net_quantity",
+      "mfg_date",
+      "expiry_date",
+      "manufacturer",
+      "customer_care",
+      "country_of_origin",
+      "mrp_tax_inclusive"
+    ],
+    "violations_count": 1,
+    "violations": [
+      "LMPC-R7-FONT-SIZE"
+    ],
+    "latency": 2.989
+  },
+  {
+    "file": "09_rotated_15deg.png",
+    "status": 200,
+    "verdict": "needs_review",
+    "facts_count": 8,
+    "facts": [
+      "mrp",
+      "net_quantity",
+      "mfg_date",
+      "expiry_date",
+      "manufacturer",
+      "customer_care",
+      "country_of_origin",
+      "mrp_tax_inclusive"
+    ],
+    "violations_count": 1,
+    "violations": [
+      "LMPC-R7-FONT-SIZE"
+    ],
+    "latency": 3.292
+  },
+  {
+    "file": "10_glare_reflection.png",
+    "status": 200,
+    "verdict": "needs_review",
+    "facts_count": 8,
+    "facts": [
+      "mrp",
+      "net_quantity",
+      "mfg_date",
+      "expiry_date",
+      "manufacturer",
+      "customer_care",
+      "country_of_origin",
+      "mrp_tax_inclusive"
+    ],
+    "violations_count": 1,
+    "violations": [
+      "LMPC-R7-FONT-SIZE"
+    ],
+    "latency": 3.033
+  },
+  {
+    "file": "11_low_light.png",
+    "status": 200,
+    "verdict": "needs_review",
+    "facts_count": 8,
+    "facts": [
+      "mrp",
+      "net_quantity",
+      "mfg_date",
+      "expiry_date",
+      "manufacturer",
+      "customer_care",
+      "country_of_origin",
+      "mrp_tax_inclusive"
+    ],
+    "violations_count": 1,
+    "violations": [
+      "LMPC-R7-FONT-SIZE"
+    ],
+    "latency": 2.175
+  },
+  {
+    "file": "12_non_permitted_units.png",
+    "status": 200,
+    "verdict": "needs_review",
+    "facts_count": 8,
+    "facts": [
+      "mrp",
+      "net_quantity",
+      "mfg_date",
+      "expiry_date",
+      "manufacturer",
+      "customer_care",
+      "country_of_origin",
+      "mrp_tax_inclusive"
+    ],
+    "violations_count": 1,
+    "violations": [
+      "LMPC-R7-FONT-SIZE"
+    ],
+    "latency": 2.278
+  },
+  {
+    "file": "13_multi_mrp.png",
+    "status": 200,
+    "verdict": "needs_review",
+    "facts_count": 8,
+    "facts": [
+      "mrp",
+      "net_quantity",
+      "mfg_date",
+      "expiry_date",
+      "manufacturer",
+      "customer_care",
+      "country_of_origin",
+      "mrp_tax_inclusive"
+    ],
+    "violations_count": 1,
+    "violations": [
+      "LMPC-R7-FONT-SIZE"
+    ],
+    "latency": 2.378
+  }
+]
