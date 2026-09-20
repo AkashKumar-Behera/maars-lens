@@ -2,7 +2,6 @@ import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import StatusBadge from '../../components/StatusBadge';
 import EmptyState from '../../components/EmptyState';
-import IndiaMapView from '../../components/IndiaMapView';
 import {
   listOfficerIncidentsApi,
   sendOfficerInquiryApi,
@@ -187,18 +186,6 @@ const OfficerDashboard = () => {
           <p className="text-2xl sm:text-3xl font-extrabold text-white mt-2">{loading ? '...' : scans.length}</p>
           <p className="text-xs text-emerald-400 mt-1">Audit certificates generated</p>
         </div>
-      </div>
-
-      {/* MapTiler India Geospatial Surveillance Radar */}
-      <div className="space-y-2">
-        <IndiaMapView
-          incidents={incidents}
-          height="380px"
-          onSelectIncident={(inc) => {
-            setSelectedIncident(inc);
-            setActiveTab('incidents');
-          }}
-        />
       </div>
 
       {/* Main Tabs Navigation */}

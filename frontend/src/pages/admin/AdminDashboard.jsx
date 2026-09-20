@@ -8,7 +8,6 @@ import {
 } from 'lucide-react';
 import { getAnalyticsOverviewApi, getAnalyticsTrendsApi, downloadExportCsvBlobApi } from '../../api/admin';
 import { getAdminGeoIntelligenceApi, executeAdminLegalActionApi } from '../../api/inquiries';
-import IndiaMapView from '../../components/IndiaMapView';
 
 // Custom sleek Glassmorphic Tooltip for Recharts
 const CustomChartTooltip = ({ active, payload, label }) => {
@@ -500,35 +499,6 @@ export default function AdminDashboard() {
             </ResponsiveContainer>
           )}
         </div>
-      </div>
-
-      {/* MapTiler National Geospatial Radar */}
-      <div className="space-y-3">
-        <div className="flex items-center justify-between">
-          <div>
-            <h2 className="text-base font-bold text-white flex items-center gap-2">
-              <MapPin size={18} className="text-rose-400" />
-              Pan-India Legal Metrology Geospatial Radar (MapTiler)
-            </h2>
-            <p className="text-xs text-slate-400">
-              Real-time visualization of citizen incident reports, hot spot districts, and supply-chain breaches.
-            </p>
-          </div>
-          <div className="flex items-center gap-3 text-xs text-slate-400 font-mono">
-            <span>Total Hotspots: <strong className="text-white">{geoIntel.geo_json?.features?.length || 0}</strong></span>
-            <span>Escalations: <strong className="text-amber-400">{geoIntel.stats?.escalated_count || 0}</strong></span>
-          </div>
-        </div>
-
-        <IndiaMapView
-          incidents={geoIntel.geo_json?.features || []}
-          height="450px"
-          onSelectIncident={(inc) => {
-            setSelectedIncident(inc);
-            setLegalActionNotes(`Formal compounding penalty under Section 36 for non-compliant packaged commodity [${inc.properties?.product_name || 'Item'}].`);
-            setLegalModalOpen(true);
-          }}
-        />
       </div>
 
       {/* National Legal Escalations & Sanctions Center */}
