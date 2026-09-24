@@ -70,11 +70,10 @@ function App() {
               <Layout>
                 <Routes>
                   <Route path="/" element={<AdminDashboard />} />
-                  <Route path="/scan" element={<NewInspection />} />
-                  <Route path="/officers" element={<UserManagement initialRole="officer" />} />
-                  <Route path="/users" element={<UserManagement initialRole="all" />} />
                   <Route path="/inspections" element={<InspectionHistory />} />
                   <Route path="/inspections/:id" element={<InspectionDetails />} />
+                  <Route path="/officers" element={<UserManagement initialRole="officer" />} />
+                  <Route path="/users" element={<UserManagement initialRole="all" />} />
                   <Route path="/violations" element={<ViolationsList />} />
                   <Route path="/rules" element={<RulesBrowser />} />
                   <Route path="*" element={<NotFound />} />

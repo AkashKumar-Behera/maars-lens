@@ -113,33 +113,78 @@ const RulesBrowser = () => {
     return matchesSearch && matchesCat;
   });
 
+  const role = user?.role || 'customer';
+
+  const roleHeaders = {
+    retailer: {
+      title: 'Merchant & Retailer Statutory Standards (LMPC 2011)',
+      subtitle: 'Mandatory packaging compliance requirements, Rule 24 multi-pack standards, and Section 39 distributor traceability guidelines for retail establishments.',
+      badge: 'Merchant Compliance Guide',
+      advisoryTitle: 'Retailer Shelf Compliance Notice',
+      advisoryText: 'As a retailer, verifying that packaged goods comply with Rule 6 before putting them on shelf protects your establishment. Keep distributor tax invoices on file for Section 39 upstream indemnity.',
+    },
+    customer: {
+      title: 'Consumer Rights & Packaging Standards Guide',
+      subtitle: 'Know your statutory rights under the Legal Metrology Act: mandatory declarations, MRP safeguards, net quantity, and consumer grievance contact standards.',
+      badge: 'Consumer Rights Portal',
+      advisoryTitle: 'Consumer Protection Standards',
+      advisoryText: 'Every pre-packaged commodity sold in India must display 10 mandatory declarations. If a retailer sells over MRP or without mfg date/net quantity, you can report them directly.',
+    },
+    officer: {
+      title: 'Legal Metrology Enforcement Rulebook',
+      subtitle: 'Official statutory thresholds, penalty sections, and rule definitions for field inspections and statutory seizure notices.',
+      badge: 'Enforcement Officer Reference',
+      advisoryTitle: 'Official Inspector Directive',
+      advisoryText: 'Statutory citations referenced here govern official inspection reports and notice compounding under Section 36 & 39 of the Legal Metrology Act, 2009.',
+    },
+    admin: {
+      title: 'National Statutory Rule Engine & Version Registry',
+      subtitle: 'Author, version, and configure statutory verification algorithms and legal rule definitions across all enforcement hubs.',
+      badge: 'Admin Rule Governance',
+      advisoryTitle: 'Statutory Engine Status',
+      advisoryText: 'Published versions are cryptographically indexed and immediately govern real-time OCR automated compliance checks nationwide.',
+    },
+  };
+
+  const currentHeader = roleHeaders[role] || roleHeaders.customer;
+
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 max-w-7xl mx-auto pb-12">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-white tracking-tight">
-            Legal Metrology Statutory Standards
-          </h1>
-          <p className="text-sm text-slate-400 mt-1">
-            Standardized mandatory declarations under the Legal Metrology (Packaged Commodities) Rules, 2011.
+          <div className="flex items-center gap-2">
+            <h1 className="text-2xl font-extrabold text-white tracking-tight flex items-center gap-2.5">
+              <span className="p-2 rounded-xl bg-indigo-500/15 border border-indigo-500/30 text-indigo-400">
+                <BookOpen size={22} />
+              </span>
+              {currentHeader.title}
+            </h1>
+            <span className="text-[10px] font-bold uppercase px-2.5 py-0.5 rounded-full bg-indigo-500/15 text-indigo-400 border border-indigo-500/30">
+              {currentHeader.badge}
+            </span>
+          </div>
+          <p className="text-xs sm:text-sm text-slate-400 mt-1">
+            {currentHeader.subtitle}
           </p>
         </div>
+
         {isAdmin && (
-          <div className="px-3 py-1.5 rounded-lg bg-indigo-500/10 border border-indigo-500/30 text-indigo-400 text-xs font-semibold flex items-center gap-2">
+          <div className="px-3 py-1.5 rounded-xl bg-indigo-500/10 border border-indigo-500/30 text-indigo-400 text-xs font-semibold flex items-center gap-2 shadow-sm">
             <ShieldCheck size={16} />
             <span>Admin Governance Mode: Version Authoring Enabled</span>
           </div>
         )}
       </div>
 
-      {/* Statutory Disclaimer Banner */}
-      <div className="p-3 bg-amber-500/10 border border-amber-500/30 rounded-xl text-amber-300 text-xs flex items-center gap-2">
-        <span className="px-1.5 py-0.5 bg-amber-500/20 text-amber-400 font-mono text-[10px] rounded font-bold uppercase">
-          legal_verified: false
-        </span>
-        <span>
-          Statutory rule citations and thresholds are unverified draft configurations subject to official review by the Legal Metrology Department.
-        </span>
+      {/* Role-tailored Advisory Banner */}
+      <div className="p-4 bg-indigo-950/30 border border-indigo-800/40 rounded-2xl text-indigo-200 text-xs space-y-1 shadow-inner">
+        <strong className="text-white block font-semibold flex items-center gap-2">
+          <ShieldCheck size={15} className="text-indigo-400" />
+          <span>{currentHeader.advisoryTitle}</span>
+        </strong>
+        <p className="text-slate-300 leading-relaxed">
+          {currentHeader.advisoryText}
+        </p>
       </div>
 
       {/* Filter Bar */}

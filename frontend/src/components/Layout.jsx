@@ -39,7 +39,6 @@ const Layout = ({ children }) => {
     ],
     admin: [
       { label: 'Analytics Dashboard', path: '/admin', icon: BarChart3 },
-      { label: 'Quick Label Scanner', path: '/admin/scan', icon: Camera },
       { label: 'Inspections Audit', path: '/admin/inspections', icon: History },
       { label: 'Statutory Rules', path: '/admin/rules', icon: BookOpen },
       { label: 'Violations Registry', path: '/admin/violations', icon: AlertTriangle },
