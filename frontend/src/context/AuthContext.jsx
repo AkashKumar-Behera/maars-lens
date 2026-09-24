@@ -69,19 +69,46 @@ export const AuthProvider = ({ children }) => {
     return userData;
   };
 
-  const register = async ({ fullName, email, password, phone }) => {
-    const data = await registerApi({
-      full_name: fullName,
-      email,
-      password,
-      phone,
-    });
+  const register = async (formData) => {
+    const payload = {
+      full_name: formData.fullName || formData.full_name,
+      email: formData.email,
+      password: formData.password,
+      phone: formData.phone || undefined,
+      role: formData.role || 'citizen',
+
+      // Retailer specific
+      retailer_id: formData.retailer_id || formData.retailerId,
+      business_name: formData.business_name || formData.businessName,
+      registration_no: formData.registration_no || formData.registrationNo,
+      business_type: formData.business_type || formData.businessType,
+      address: formData.address,
+      district: formData.district,
+      state: formData.state,
+
+      // Officer specific
+      officer_id: formData.officer_id || formData.officerId,
+      employee_id: formData.employee_id || formData.employeeId,
+      designation: formData.designation,
+      jurisdiction: formData.jurisdiction,
+
+      // Admin specific
+      admin_id: formData.admin_id || formData.adminId,
+      department: formData.department,
+      admin_secret_key: formData.admin_secret_key || formData.adminSecretKey,
+
+      // Proof
+      proof_filename: formData.proof_filename || formData.proofFilename,
+      proof_data: formData.proof_data || formData.proofData,
+    };
+
+    const data = await registerApi(payload);
 
     if (data.access_token) {
       const userData = {
         id: data.user.id,
         email: data.user.email,
-        name: data.user.full_name || email.split('@')[0].toUpperCase(),
+        name: data.user.full_name || (formData.email ? formData.email.split('@')[0].toUpperCase() : 'USER'),
         role: data.user.role || 'customer',
       };
       setUser(userData);

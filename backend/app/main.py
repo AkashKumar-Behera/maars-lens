@@ -48,6 +48,11 @@ app.include_router(reports.router, prefix="/api/v1/reports", tags=["reports"])
 app.include_router(notifications.router, prefix="/api/v1/notifications", tags=["notifications"])
 app.include_router(areas.router, prefix="/api/v1/areas", tags=["areas"])
 
+import os
+from fastapi.staticfiles import StaticFiles
+os.makedirs("uploads/proofs", exist_ok=True)
+app.mount("/uploads", StaticFiles(directory="uploads"), name="uploads")
+
 @app.get("/")
 def read_root():
     return {"message": "MAARS Lens API is running"}

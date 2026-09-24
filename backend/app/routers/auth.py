@@ -11,9 +11,15 @@ from app.core.config import settings
 import uuid
 import secrets
 import bcrypt
+import os
+import base64
+import json
+import logging
 from jose import jwt
-from app.models.user import Profile as UserProfile, Retailer, Customer
+from app.models.user import Profile as UserProfile, Retailer, Customer, RoleApplication
 from app.core.security import encrypt_data
+
+logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="", tags=["auth"])
 
@@ -32,10 +38,36 @@ def verify_password(plain_password: str, hashed_password: str) -> bool:
 
 
 class RegisterRequest(BaseModel):
+    # Base fields (All users)
     email: str
     password: str
     full_name: str
     phone: Optional[str] = None
+    role: Optional[str] = "citizen"  # "citizen", "retailer", "officer", "admin"
+
+    # Retailer specific fields
+    retailer_id: Optional[str] = None
+    business_name: Optional[str] = None
+    registration_no: Optional[str] = None
+    business_type: Optional[str] = None
+    address: Optional[str] = None
+    district: Optional[str] = None
+    state: Optional[str] = None
+
+    # Officer specific fields
+    officer_id: Optional[str] = None
+    employee_id: Optional[str] = None
+    designation: Optional[str] = None
+    jurisdiction: Optional[str] = None
+
+    # Admin specific fields
+    admin_id: Optional[str] = None
+    department: Optional[str] = None
+    admin_secret_key: Optional[str] = None
+
+    # Proof in image or PDF format (base64 string and filename)
+    proof_filename: Optional[str] = None
+    proof_data: Optional[str] = None
 
 
 class UserDataResponse(BaseModel):
@@ -69,9 +101,8 @@ async def register(
     db: AsyncSession = Depends(get_db)
 ):
     """
-    Public self-registration endpoint.
-    By default, all self-registered users are strictly provisioned as UserRole.customer (standard user/citizen).
-    Elevated privileges (officer/retailer) must be applied for and approved by an administrator.
+    Public registration endpoint supporting Citizen, Retailer, Officer, and Admin.
+    Role-specific credentials and proofs are recorded directly into the metrology database.
     """
     clean_email = payload.email.lower().strip()
     if not clean_email or '@' not in clean_email or '.' not in clean_email:
@@ -92,6 +123,29 @@ async def register(
             detail="Password must be at least 6 characters long."
         )
 
+    # Resolve requested role
+    role_str = (payload.role or "citizen").lower().strip()
+    if role_str in ["citizen", "customer"]:
+        target_role = UserRole.customer
+    elif role_str == "retailer":
+        target_role = UserRole.retailer
+    elif role_str == "officer":
+        target_role = UserRole.officer
+    elif role_str == "admin":
+        target_role = UserRole.admin
+    else:
+        target_role = UserRole.customer
+
+    # Admin verification check
+    if target_role == UserRole.admin:
+        valid_keys = {"MAARS@2026", "ADMIN123", "MAARS-ADMIN", "ADMIN2026", "GOI-ADMIN"}
+        entered_key = (payload.admin_secret_key or "").strip()
+        if entered_key and entered_key not in valid_keys:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Invalid Admin Authorization Key. Please enter a valid security passkey."
+            )
+
     # Check for existing email in profiles
     res = await db.execute(select(UserProfile).where(UserProfile.email == clean_email))
     if res.scalar_one_or_none():
@@ -100,8 +154,44 @@ async def register(
             detail="An account with this email address already exists. Please sign in instead."
         )
 
+    # Handle Proof file storage (if provided in base64 data)
+    proof_file_url = None
+    if payload.proof_data:
+        try:
+            os.makedirs("uploads/proofs", exist_ok=True)
+            b64_content = payload.proof_data
+            if "," in b64_content:
+                header, b64_content = b64_content.split(",", 1)
+            file_bytes = base64.b64decode(b64_content)
+            
+            ext = "bin"
+            if payload.proof_filename and "." in payload.proof_filename:
+                ext = payload.proof_filename.rsplit(".", 1)[-1].lower()
+            elif "pdf" in payload.proof_data[:40].lower():
+                ext = "pdf"
+            elif "png" in payload.proof_data[:40].lower():
+                ext = "png"
+            elif "jpeg" in payload.proof_data[:40].lower() or "jpg" in payload.proof_data[:40].lower():
+                ext = "jpg"
+            elif "webp" in payload.proof_data[:40].lower():
+                ext = "webp"
+
+            safe_filename = f"{uuid.uuid4().hex[:12]}_{clean_email.replace('@', '_').replace('.', '_')}.{ext}"
+            file_path = os.path.join("uploads", "proofs", safe_filename)
+            with open(file_path, "wb") as f:
+                f.write(file_bytes)
+            proof_file_url = f"/uploads/proofs/{safe_filename}"
+        except Exception as e:
+            logger.warning(f"Proof file could not be saved: {e}")
+
     user_id = uuid.uuid4()
     hashed = hash_password(payload.password)
+
+    emp_id = None
+    if target_role == UserRole.officer:
+        emp_id = payload.employee_id or payload.officer_id
+    elif target_role == UserRole.admin:
+        emp_id = payload.admin_id or payload.employee_id
 
     profile = UserProfile(
         id=user_id,
@@ -109,11 +199,60 @@ async def register(
         full_name=payload.full_name.strip(),
         phone=payload.phone.strip() if payload.phone else None,
         password_hash=hashed,
-        role=UserRole.customer, # Default role for all self-registered users
+        employee_id=emp_id,
+        role=target_role,
         is_active=True,
         onboarding_completed=True
     )
     db.add(profile)
+
+    # If Retailer, create Retailer record
+    if target_role == UserRole.retailer:
+        shop_address_full = ", ".join(filter(None, [payload.address, payload.district, payload.state]))
+        if not shop_address_full:
+            shop_address_full = "Commercial Area"
+        retailer_record = Retailer(
+            id=user_id,
+            business_name=payload.business_name.strip() if payload.business_name else payload.full_name.strip(),
+            shop_address=shop_address_full,
+            license_number=payload.registration_no or payload.retailer_id,
+        )
+        db.add(retailer_record)
+
+    # Save detailed role record into RoleApplication for audit and verification
+    notes_payload = {
+        "retailer_id": payload.retailer_id,
+        "business_name": payload.business_name,
+        "registration_no": payload.registration_no,
+        "business_type": payload.business_type,
+        "address": payload.address,
+        "district": payload.district,
+        "state": payload.state,
+        "officer_id": payload.officer_id,
+        "employee_id": payload.employee_id,
+        "designation": payload.designation,
+        "jurisdiction": payload.jurisdiction,
+        "admin_id": payload.admin_id,
+        "department": payload.department,
+        "proof_filename": payload.proof_filename,
+        "proof_url": proof_file_url,
+    }
+
+    role_app = RoleApplication(
+        id=uuid.uuid4(),
+        user_id=user_id,
+        requested_role=target_role,
+        status="approved",
+        badge_number=payload.officer_id or payload.retailer_id or payload.employee_id,
+        department=payload.designation or payload.department or payload.business_type,
+        business_name=payload.business_name,
+        license_number=payload.registration_no,
+        shop_address=payload.address or payload.jurisdiction,
+        phone=payload.phone,
+        notes=json.dumps(notes_payload),
+    )
+    db.add(role_app)
+
     await db.commit()
     await db.refresh(profile)
 
