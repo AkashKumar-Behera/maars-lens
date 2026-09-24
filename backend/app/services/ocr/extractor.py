@@ -282,13 +282,19 @@ class WinOCRExtractor(BaseOCRExtractor):
             else:
                 pil_img = Image.fromarray(image)
 
-            # Scale up small images for fine text clarity
+            # Scale image optimally for fast and sharp OCR recognition
             w, h = pil_img.size
-            if max(w, h) < 1800:
-                scale = min(2.5, 2000.0 / max(w, h))
-                new_w, new_h = int(w * scale), int(h * scale)
-                pil_img = pil_img.resize((new_w, new_h), Image.Resampling.LANCZOS)
-                pil_img = ImageEnhance.Sharpness(pil_img).enhance(1.4)
+            max_dim = max(w, h)
+            if max_dim > 1600:
+                scale = 1600.0 / max_dim
+                new_w, new_h = max(1, int(w * scale)), max(1, int(h * scale))
+                pil_img = pil_img.resize((new_w, new_h), Image.Resampling.BILINEAR)
+            elif max_dim < 1000:
+                scale = min(2.0, 1200.0 / max(1, max_dim))
+                new_w, new_h = max(1, int(w * scale)), max(1, int(h * scale))
+                pil_img = pil_img.resize((new_w, new_h), Image.Resampling.BILINEAR)
+
+            pil_img = ImageEnhance.Sharpness(pil_img).enhance(1.2)
 
             async def _run_ocr():
                 return await winocr.recognize_pil(pil_img, 'en')

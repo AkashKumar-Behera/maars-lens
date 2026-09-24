@@ -15,6 +15,7 @@ export const customerScanLabelApi = async (filesOrFile, panelTypes = 'front') =>
 
   const response = await apiClient.post('/customer/scan', formData, {
     headers: { 'Content-Type': 'multipart/form-data' },
+    timeout: 120000,
   });
   return response.data;
 };
