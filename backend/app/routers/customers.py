@@ -25,7 +25,7 @@ async def scan_product_label(
     panel_types: Optional[str] = Form(None), # JSON string or comma-separated list of panel types
     panel_type: Optional[str] = Form("front"),
     db: AsyncSession = Depends(get_db),
-    current_user: dict = Depends(require_role(UserRole.customer)),
+    current_user: dict = Depends(require_role(UserRole.customer, UserRole.retailer, UserRole.officer, UserRole.admin)),
 ):
     """
     Consumer Real-Time Product Label Scan & Compliance Audit.
